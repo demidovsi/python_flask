@@ -1,0 +1,10 @@
+{
+  "url1": "https://as-easy.com/",
+  "url": "http://127.0.0.1:5000/",
+  "schema_name": "family",
+  "info_code": "nsi",
+  "user_name": "superadmin",
+  "password": "Kirill!981",
+  "OwnHost": "127.0.0.1",
+  "OwnPort": 8000
+}

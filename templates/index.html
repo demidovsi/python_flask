@@ -1,0 +1,95 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<!--        <input type="text" class="form-control dp" />-->
+
+<!--        <div class="form-group">-->
+<!--            <button type="submit" class="btn btn-primary">Submit</button>-->
+<!--        </div>-->
+<form method="post">
+    <link rel="stylesheet" type="text/css" href="/static/css/index.css">
+    <div id="combobox">
+        <h7>Тип списка:
+            <select id="select_type" name="type_history">
+            {% if type_history == "Месяц": %}
+                    <option value="Сутки"> Сутки</option>
+                    <option value="Месяц" selected> Месяц</option>
+                    <option value="Год"> Год</option>
+            {% endif %}
+            {% if type_history == "Год": %}
+                    <option value="Сутки"> Сутки</option>
+                    <option value="Месяц"> Месяц</option>
+                    <option value="Год" selected> Год</option>
+            {% endif %}
+            {% if type_history == "Сутки": %}
+                    <option value="Сутки" selected> Сутки</option>
+                    <option value="Месяц"> Месяц</option>
+                    <option value="Год"> Год</option>
+            {% endif %}
+            </select>
+            Дата расходов: <input type="date" id="start" name="dt_start" value="{{st_date}}" required >
+        </h7>
+    </div>
+    <caption>Расходы за {{type_history}}</caption>
+
+    <!--    <h1>{% block title %} Welcome to Расходы {% endblock %}</h1>-->
+    <table id="historyTable" class="table table-striped hover order-column">
+<!--    <table id="historyTable" class="cell-border stripe hover">-->
+        <thead>
+            <tr>
+                <th scope="col">Дата</th>
+                <th scope="col">Расход</th>
+                <th scope="col">Категория</th>
+                <th scope="col">Комментарий</th>
+                <th scope="col">ID</th>
+                <th scope="col">Delete</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for data in datas %}
+                {% if data['id'] %}
+                    <tr>
+                        <td>{{data['dt']}}</td>
+                        <td style="color:green; font-size:16px"><div align="right">{{data['money']}}</div> </td>
+                        <td><div align="center">{{data['category']}}</div> </td>
+                        <td><div align="left">{{data['comment']}}</div> </td>
+                        <td><div align="right">{{data['id']}}</div> </td>
+                        <td> <div align="center"></div> <input type="checkbox" name="delete"> </td>
+                    </tr>
+                {% endif %}
+            {% endfor %}
+        </tbody>
+    </table>
+    <div class="form-group">
+        <button type="submit" class="btn btn-primary">Выполнить изменения</button>
+    </div>
+</form>
+{% endblock %}
+
+{% block scripts %}
+  <script>
+<!--    var el = document.getElementById("combobox");-->
+<!--    el.setValue("{{type_history}}");-->
+    $(document).ready(function () {
+      $('#historyTable').DataTable({
+        columns: [
+          {orderable: true, searchable: true},
+          {orderable: true, searchable: true},
+          {orderable: true, searchable: true},
+          {orderable: true, searchable: true},
+          {orderable: true, searchable: true},
+          {orderable: true, searchable: true}
+         ],
+      });
+    });
+
+    $("#combobox").change(function(){
+     var selectedcolor = $('#combobox option:selected').text();
+
+        alert (selectedcolor);
+    });
+
+    type_history = document.getElementById("combobox").value;
+  </script>
+
+{% endblock %}

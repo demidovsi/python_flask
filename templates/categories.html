@@ -1,0 +1,11 @@
+<!--<title><block title %><endblock %></title>-->
+{% extends 'base.html' %}
+
+{% block content %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+	<h1>Список категорий расходов:</h1>
+    {% 	for category in categories %}
+        <li>{{category.id}} - {{category.sh_name}}</li>
+    {% endfor %}
+    <h3>----------------------------</h3>
+{% endblock %}

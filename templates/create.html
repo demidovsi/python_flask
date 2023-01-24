@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h1>{% block title %} Создание нового расхода {% endblock %}</h1>
+
+<form method="post">
+    <div class="form-group">
+        <label for="dt">Дата расхода</label>
+        <input type="text" name="dt"
+               placeholder="Дата расхода" class="form-control"
+               value="{{ request.form['dt'] }}"></input>
+    </div>
+
+    <div class="form-group">
+        <label for="money">Истрачено</label>
+        <textarea name="money" placeholder="Истрачено"
+                  class="form-control">{{ request.form['money'] }}</textarea>
+    </div>
+    <div class="form-group">
+        <label for="cat_id">Тип расхода</label>
+        <textarea name="cat_id" placeholder="Тип расхода"
+                  class="form-control">{{ request.form['cat_id'] }}</textarea>
+    </div>
+    <div class="form-group">
+        <label for="comment">Комментарий</label>
+        <textarea name="comment" placeholder="Комментарий"
+                  class="form-control">{{ request.form['comment'] }}</textarea>
+    </div>
+    <div class="form-group">
+        <button type="submit" class="btn btn-primary">Принять</button>
+    </div>
+</form>
+{% endblock %}

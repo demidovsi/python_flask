@@ -1,0 +1,18 @@
+body
+{
+    font-family:Verdana;
+    font-size:14px;
+}
+
+table, th, td
+{
+    border: 1px solid #0088ff;
+    font-family:Verdana;
+    font-size:12px;
+}
+
+th
+{
+    background: #ffc107;
+    color: blue;
+}
