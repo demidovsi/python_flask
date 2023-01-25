@@ -10,9 +10,22 @@ table, th, td
     font-family:Verdana;
     font-size:12px;
 }
+table
+{
+    box-shadow: 5px 5px grey;
+}
 
 th
 {
     background: #ffc107;
+    background: #E0FFFF;
+    color: blue;
+}
+
+tfoot
+{
+    font-size:16px;
+    background: #FFE4B5;
+    background: #E0FFFF;
     color: blue;
 }
