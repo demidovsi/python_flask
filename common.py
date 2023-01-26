@@ -17,13 +17,21 @@ token = ''
 expires = None
 user_role = None
 rashod_id = None
+categories = list()
 
 select_year = None
 select_month = None
 select_day = None
 select_type = 'Сутки'
 select_name_month = 'январь'
+left = None
+right = None
+current_month = None
+current_year = None
+current_day = None
 year = 2023
+months = ['январь', 'февраль', 'март', 'апрель', 'май', 'июнь', 'июль', 'август', 'сентябрь', 'октябрь', 'ноябрь',
+          'декабрь']
 
 
 def make_start():
@@ -214,3 +222,83 @@ def translateToBase(st):
     st = st.replace(',', '~a2~').replace('=', '~a3~').replace('"', '~a4~').replace("'", '~a5~')
     st = st.replace(':', '~a6~').replace('/', '~b1~')
     return st
+
+
+def load_categories():
+    global categories
+    answer, result, status_result = send_rest('v1/objects/family/categor')
+    if result:
+        answer = json.loads(answer)
+        categories = answer['values']
+
+
+def clear_current():
+    global left, right, current_month, current_year, current_day
+    left = None
+    right = None
+    current_month = None
+    current_year = None
+    current_day = None
+
+
+def get_current(request):
+    global select_type, select_year, select_month, select_day, select_name_month, year, left, right, current_month, \
+        current_year, current_day
+    if 'dt_start' in request.form:
+        select_year, select_month, select_day = request.form['dt_start'].split('-')
+        select_year = int(select_year)
+        select_month = int(select_month)
+        select_day = int(select_day)
+    if 'type_history' in request.form:
+        select_type = request.form['type_history']
+    if 'select_month' in request.form:
+        select_name_month = request.form['select_month']
+    if 'select_name_month' in request.form:
+        select_name_month = request.form['select_name_month']
+    if 'year' in request.form:
+        year = int(request.form['year'])
+    left = request.form.get('left')
+    right = request.form.get('right')
+    current_month = request.form.get('current_month')
+    current_year = request.form.get('current_year')
+    current_day = request.form.get('current_day')
+
+
+def get_data():
+    global select_year, year, select_name_month, select_month, select_day, months
+    if select_year is None:
+        select_year = time.gmtime().tm_year
+        select_month = time.gmtime().tm_mon
+        select_day = time.gmtime().tm_mday
+
+    if select_type == 'Год':
+        if left:
+            year = year - 1
+        if right:
+            year = year + 1
+        if current_year:
+            year = time.gmtime().tm_year
+        return load_year(year)
+    elif select_type == 'Месяц':
+        month = months.index(select_name_month) + 1
+        if left:
+            year, month = calc_month(year, month, -1)
+        if right:
+            year, month = calc_month(year, month, 1)
+        if current_month:
+            year = time.gmtime().tm_year
+            month = time.gmtime().tm_mon
+        select_name_month = months[month - 1]
+        return load_month(month, year)
+    else:
+        if left:
+            select_year, select_month, select_day = \
+                calc_day(select_year, select_month, select_day, -1)
+        if right:
+            select_year, select_month, select_day = \
+                calc_day(select_year, select_month, select_day, 1)
+        if current_day:
+            select_year = time.gmtime().tm_year
+            select_month = time.gmtime().tm_mon
+            select_day = time.gmtime().tm_mday
+        return load_day(select_day, select_month, select_year)

@@ -1,0 +1,63 @@
+{% extends 'base_index.html' %}
+
+{% block content1 %}
+    <caption>Информация за {{type_history}}</caption>
+<form method="post" name="summary">
+    <table id="summaryTable" class="table table-striped hover order-column">
+        <thead>
+            <tr>
+                <th scope="col">Тип расхода</th>
+                <th scope="col">Истрачено</th>
+                {% if type_history == "Год": %}
+                    {% for month in months: %}
+                        <th scope="col">{{month}}</th>
+                    {% endfor %}
+                {% endif %}
+                {% if type_history == "Месяц": %}
+                    {% for i in range(count_day): %}
+                        <th scope="col">{{i + 1}}</th>
+                    {% endfor %}
+                {% endif %}
+            </tr>
+        </thead>
+        <tbody>
+            {% for data in datas %}
+                {% if data['2']: %}
+                    <tr>
+                        <td>{{data['1']}}</td>
+                        <td><div align="center">{{data['2']}}</div> </td>
+                        {% for ind in index: %}
+                            {% if data[ind]: %}
+                                <td>{{data[ind]}}</td>
+                            {% else %}
+                                <td></td>
+                            {% endif %}
+                        {% endfor %}
+                    </tr>
+                {% endif %}
+            {% endfor %}
+        </tbody>
+    </table>
+</form>
+{% endblock %}
+
+
+{% block scripts %}
+  <script>
+    $(document).ready(function () {
+
+      $('#summaryTable').DataTable({
+<!--        columns: [-->
+<!--          {orderable: false, searchable: false},-->
+<!--          {orderable: false, searchable: false}-->
+<!--         ],-->
+      });
+
+      $('#combobox').on('change', function() {
+            document.forms['summary'].submit();
+        });
+
+    });
+  </script>
+
+{% endblock %}

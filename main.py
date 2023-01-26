@@ -1,83 +1,38 @@
 import json
 from flask import Flask
 from flask import render_template, request, url_for, flash, redirect
+from flask_sqlalchemy import SQLAlchemy
+from flask_login import LoginManager
+from flask_migrate import Migrate
+from config import Config
+import calendar
 import common
 import time
 
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'my secret key'
-months = ['январь', 'февраль', 'март', 'апрель', 'май', 'июнь', 'июль', 'август', 'сентябрь', 'октябрь', 'ноябрь',
-          'декабрь']
+# db = SQLAlchemy(app)
+# migrate = Migrate(app, db)
+# login = LoginManager(app)
+# login.login_view = 'login'
 
 
 @app.route('/', methods=('GET', 'POST'))
 def index():
-    left = None
-    right = None
-    current_month = None
-    current_year = None
-    current_day = None
+    common.clear_current()
     if request.method == 'POST':
-        if 'dt_start' in request.form:
-            common.select_year, common.select_month, common.select_day = request.form['dt_start'].split('-')
-            common.select_year = int(common.select_year)
-            common.select_month = int(common.select_month)
-            common.select_day = int(common.select_day)
-        if 'type_history' in request.form:
-            common.select_type = request.form['type_history']
-        if 'select_month' in request.form:
-            common.select_name_month = request.form['select_month']
-        if 'select_name_month' in request.form:
-            common.select_name_month = request.form['select_name_month']
-        if 'year' in request.form:
-            common.year = int(request.form['year'])
-        left = request.form.get('left')
-        right = request.form.get('right')
-        current_month = request.form.get('current_month')
-        current_year = request.form.get('current_year')
-        current_day = request.form.get('current_day')
+        common.get_current(request)
         for key in request.form.keys():
             if 'delete' in key:
                 st2, st2 = key.split('delete')
                 print('Надо удалить расход с id= ' + st2)
-    if common.select_year is None:
-        common.select_year = time.gmtime().tm_year
-        common.select_month = time.gmtime().tm_mon
-        common.select_day = time.gmtime().tm_mday
+        for key in request.form.keys():
+            if 'correct' in key:
+                st2, st2 = key.split('correct')
+                return redirect(f"correct/{st2}")
 
-    if common.select_type == 'Год':
-        if left:
-            common.year = common.year - 1
-        if right:
-            common.year = common.year + 1
-        if current_year:
-            common.year = time.gmtime().tm_year
-        result = common.load_year(common.year)
-    elif common.select_type == 'Месяц':
-        month = months.index(common.select_name_month) + 1
-        if left:
-            common.year, month = common.calc_month(common.year, month, -1)
-        if right:
-            common.year, month = common.calc_month(common.year, month, 1)
-        if current_month:
-            common.year = time.gmtime().tm_year
-            month = time.gmtime().tm_mon
-        common.select_name_month = months[month - 1]
-        result = common.load_month(month, common.year)
-    else:
-        if left:
-            common.select_year, common.select_month, common.select_day = \
-                common.calc_day(common.select_year, common.select_month, common.select_day, -1)
-        if right:
-            common.select_year, common.select_month, common.select_day = \
-                common.calc_day(common.select_year, common.select_month, common.select_day, 1)
-        if current_day:
-            common.select_year = time.gmtime().tm_year
-            common.select_month = time.gmtime().tm_mon
-            common.select_day = time.gmtime().tm_mday
-        result = common.load_day(common.select_day, common.select_month, common.select_year)
-
+    result = common.get_data()
     if result is not None:
         st_date = str(common.select_year) + '-' + str(common.select_month).rjust(2, '0') + '-' + \
                   str(common.select_day).rjust(2, '0')
@@ -86,10 +41,10 @@ def index():
         for data in datas:
             try:
                 moneys = moneys + data['money']
-            except:
-                print('error money', data)
+            except Exception as err:
+                print('error money', f"{err}", data)
         return render_template(
-            "index.html", datas=datas, st_date=st_date, type_history=common.select_type, months=months,
+            "index.html", datas=datas, st_date=st_date, type_history=common.select_type, months=common.months,
             select_name_month=common.select_name_month, year=common.year, count_datas=len(datas),
             moneys=round(moneys, 2))
 
@@ -98,11 +53,6 @@ def index():
 def create():
     st_date = str(time.gmtime().tm_year) + '-' + str(time.gmtime().tm_mon).rjust(2, '0') + '-' + \
               str(time.gmtime().tm_mday).rjust(2, '0')
-    answer, result, status_result = common.send_rest('v1/objects/family/categor')
-    if result:
-        answer = json.loads(answer)
-        categories = answer['values']
-
     if request.method == 'POST':
         money = request.form['money']
         comment = request.form['comment']
@@ -110,9 +60,9 @@ def create():
         year, month, day = dt.split('-')
         dt = str(year) + '-' + str(month) + '-' + str(day)
         cat_id = request.form['select_category']
-        for category in categories:
-            if category['sh_name'] == cat_id:
-                cat_id = category['id']
+        for cat in common.categories:
+            if cat['sh_name'] == cat_id:
+                cat_id = cat['id']
                 break
 
         if not money or float(money) == 0:
@@ -120,7 +70,10 @@ def create():
         elif type(cat_id) == str:
             flash('Тип расхода is required!')
         else:
-            values = {'id': 0, 'cat_id': cat_id, 'money': money}
+            values = dict()
+            values["id"] = 0
+            values["cat_id"] = cat_id
+            values["money"] = money
             values['dt'] = "'" + dt + "'"
             values['comment'] = common.translateToBase(comment)
             params = dict()
@@ -136,27 +89,21 @@ def create():
                     flash(answer)
                 else:
                     return redirect(url_for('index'))
-    return render_template("create.html", st_date=st_date, categories=categories, title='Создание нового расхода',
-                           id=None, select_category=None, money=0)
+    return render_template(
+        "create.html", st_date=st_date, categories=common.categories, title='Создание нового расхода',
+        id=None, select_category=None, money=0)
 
 
-@app.route('/correct/<int:id>/', methods=('GET', 'POST'))
-def correct(id):
-    categories = list()
-    answer, result, status_result = common.send_rest('v1/objects/family/categor')
-    if result:
-        answer = json.loads(answer)
-        categories = answer['values']
+@app.route('/correct/<int:obj_id>/', methods=('GET', 'POST'))
+def correct(obj_id):
     if request.method == 'POST' and 'dt' in request.form and request.form['dt']:
         money = request.form['money']
         comment = request.form['comment']
         dt = request.form['dt']
-        year, month, day = dt.split('-')
-        dt = str(year) + '-' + str(month) + '-' + str(day)
         cat_id = request.form['select_category']
-        for category in categories:
-            if category['sh_name'] == cat_id:
-                cat_id = category['id']
+        for cat in common.categories:
+            if cat['sh_name'] == cat_id:
+                cat_id = cat['id']
                 break
 
         if not money or float(money) == 0:
@@ -164,7 +111,10 @@ def correct(id):
         elif type(cat_id) == str:
             flash('Тип расхода is required!')
         else:
-            values = {'id': 0, 'cat_id': cat_id, 'money': money, 'id': id}
+            values = dict()
+            values['cat_id'] = cat_id
+            values['money'] = money
+            values['id'] = obj_id
             values['dt'] = "'" + dt + "'"
             values['comment'] = common.translateToBase(comment)
             params = dict()
@@ -179,33 +129,95 @@ def correct(id):
                 if not result:
                     flash(answer)
                 else:
+                    year, month, day = dt.split('-')
+                    common.select_type = 'Сутки'
+                    common.select_year = int(year)
+                    common.select_month = int(month)
+                    common.select_day = int(day)
                     return redirect(url_for('index'))
     else:
-        answer, result, status_result = common.send_rest('v1/object/family/rashod/' + str(id))
+        answer, result, status_result = common.send_rest('v1/object/family/rashod/' + str(obj_id))
         if result:
             answer = json.loads(answer)[0]
-            comment = answer['comment']
+            comment = common.translateFromBase(answer['comment'])
             select_category = answer['cat_id_reference']['sh_name']
             if 'money' in answer:
-                money = answer['money']
+                money = round(answer['money'], 2)
             else:
                 money = None
             dt, t = answer['dt'].split(' ')
-            year, month, day = dt.split('-')
-            dt = str(year) + '-' + str(month) + '-' + str(day)
-    return render_template("create.html", categories=categories, title='Коррекция расхода с ID= ' + str(id), id=id,
-                           comment=comment, select_category=select_category, money=money, st_date=dt)
+            return render_template(
+                "create.html", categories=common.categories, title='Коррекция расхода с ID= ' + str(obj_id), id=obj_id,
+                comment=comment, select_category=select_category, money=money, st_date=dt)
 
 
 @app.route('/category/')
 def category():
-    answer, result, status_result = common.send_rest('v1/objects/family/categor')
-    if result:
-        answer = json.loads(answer)
-        categories = answer['values']
-        return render_template("categories.html", title="Категории расходов", categories=categories)
+    return render_template("categories.html", title="Категории расходов", categories=common.categories)
+
+
+@app.route('/summary/', methods=('GET', 'POST'))
+def summary():
+    common.clear_current()
+    if request.method == 'POST':
+        common.get_current(request)
+        for key in request.form.keys():
+            if 'correct' in key:
+                st2, st2 = key.split('correct')
+                return redirect(f"correct/{st2}")
+    result = common.get_data()
+    count_day = calendar.monthrange(common.year, common.months.index(common.select_name_month) + 1)[1]
+    if result is not None:
+        mas_data = list()
+        for data in result:
+            if data['6'] == 1:
+                if data['2'] is not None:
+                    data['2'] = round(data['2'], 2)
+                mas_data.append(data)
+        count = 0
+        if common.select_type != 'Сутки':
+            if common.select_type == 'Месяц':
+                count = count_day
+            else:
+                count = 12
+            for data in result:
+                if data['6'] == 2:  # нашли запись за сутки
+                    for i in range(len(mas_data)):
+                        if data['0'] == mas_data[i]['0']:  # нашли элемент для вывода
+                            i = 1
+                            while i <= count:
+                                ind = str(8 + i)
+                                try:
+                                    if data[ind] is not None:
+                                        if mas_data[i][ind] is None:
+                                            mas_data[i][ind] = 0
+                                        mas_data[i][ind] = round(mas_data[i][ind] + data[ind], 2)
+                                except:
+                                    print(ind, count, common.select_name_month)
+                                i += 1
+            for data in mas_data:
+                i = 1
+                while i <= count:
+                    ind = str(i + 8)
+                    if data[ind] is None:
+                        data[ind] = ""
+                    else:
+                        data[ind] = str(round(data[ind], 2))
+                    i += 1
+
+        st_date = str(common.select_year) + '-' + str(common.select_month).rjust(2, '0') + '-' + \
+              str(common.select_day).rjust(2, '0')
+        index = list()
+        for i in range(count):
+            index.append(str(i+9))
+        return render_template(
+            "summary.html", st_date=st_date, type_history=common.select_type, months=common.months,
+            select_name_month=common.select_name_month, year=common.year, datas=mas_data, count_day=count,
+            index=index)
 
 
 common.make_start()
 common.define_rashod_id()
+common.load_categories()
+
 app.run(port=common.OWN_PORT, host=common.OWN_HOST, debug=True)

@@ -1,8 +1,8 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<form method="post" name="history">
-    <link rel="stylesheet" type="text/css" href="/static/css/index.css">
+<form method="post" name="summary">
+    <link rel="stylesheet" type="text/css" href="/static/css/summary.css">
     <div id="combobox">
         <p>Интервал для списка:
             <select id="select_type" name="type_history">
@@ -61,68 +61,6 @@
             {% endif %}
         </p>
     </div>
-    <caption>Расходы за {{type_history}}</caption>
-
-    <table id="historyTable" class="table table-striped hover order-column">
-        <thead>
-            <tr>
-                <th scope="col">Дата</th>
-                <th scope="col">Расход</th>
-                <th scope="col">Категория</th>
-                <th scope="col">Комментарий</th>
-                <th scope="col">ID</th>
-                <th scope="col">Delete</th>
-                <th scope="col">Коррекция</th>
-            </tr>
-        </thead>
-        <tfoot>
-            <tr>
-                <td colspan="3"> Суммарно покупок={{count_datas}}</td>
-                <td colspan="4"> Суммарный расход за период= {{moneys}}</td>
-            </tr>
-        </tfoot>
-        <tbody>
-            {% for data in datas %}
-                {% if data['id'] %}
-                    <tr>
-                        <td>{{data['dt']}}</td>
-                        <td style="color:green; font-size:16px; font-weight: bold">
-                            <div align="right">{{data['money']}}</div>
-                        </td>
-                        <td><div align="center">{{data['category']}}</div> </td>
-                        <td><div align="left">{{data['comment']}}</div> </td>
-                        <td><div align="right">{{data['id']}}</div> </td>
-                        <td> <div align="center"></div> <input type="checkbox" name="delete{{data['id']}}"> </td>
-                        <td> <div align="center"></div> <button name="correct{{data['id']}}">Изменить</button></td>
-                    </tr>
-                {% endif %}
-            {% endfor %}
-        </tbody>
-    </table>
 </form>
-{% endblock %}
-
-{% block scripts %}
-  <script>
-    $(document).ready(function () {
-
-      $('#historyTable').DataTable({
-        columns: [
-          {orderable: true, searchable: true},
-          {orderable: true, searchable: true},
-          {orderable: true, searchable: true},
-          {orderable: true, searchable: true},
-          {orderable: true, searchable: true},
-          {orderable: true, searchable: true},
-          {orderable: false, searchable: false}
-         ],
-      });
-
-      $('#combobox').on('change', function() {
-            document.forms['history'].submit();
-        });
-
-    });
-  </script>
-
+{% block content1 %} {% endblock %}
 {% endblock %}

@@ -1,0 +1,31 @@
+body
+{
+    font-family:Verdana;
+    font-size:12px;
+}
+
+table, th, td
+{
+    border: 1px solid #0088ff;
+    font-family:Verdana;
+    font-size:12px;
+}
+table
+{
+    box-shadow: 5px 5px grey;
+}
+
+th
+{
+    background: #E0FFFF;
+    background: #ffc107;
+    color: blue;
+}
+
+tfoot
+{
+    font-size:12px;
+    background: #FFE4B5;
+    background: #E0FFFF;
+    color: blue;
+}
