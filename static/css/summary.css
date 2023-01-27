@@ -10,10 +10,6 @@ table, th, td
     font-family:Verdana;
     font-size:12px;
 }
-table
-{
-    box-shadow: 5px 5px grey;
-}
 
 th
 {
@@ -29,3 +25,15 @@ tfoot
     background: #E0FFFF;
     color: blue;
 }
+
+
+
+table {
+  /*  table-layout: fixed; */
+}
+
+/*
+table td.first_td {
+    width: 300px;
+}
+*/

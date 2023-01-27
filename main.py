@@ -88,6 +88,10 @@ def create():
                 if not result:
                     flash(answer)
                 else:
+                    if common.page_for_return is not None:
+                        st = common.page_for_return
+                        common.page_for_return = None
+                        return redirect(st)
                     return redirect(url_for('index'))
     return render_template(
         "create.html", st_date=st_date, categories=common.categories, title='Создание нового расхода',
@@ -129,6 +133,10 @@ def correct(obj_id):
                 if not result:
                     flash(answer)
                 else:
+                    if common.page_for_return is not None:
+                        st = common.page_for_return
+                        common.page_for_return = None
+                        return redirect(st)
                     year, month, day = dt.split('-')
                     common.select_type = 'Сутки'
                     common.select_year = int(year)
@@ -164,56 +172,22 @@ def summary():
         for key in request.form.keys():
             if 'correct' in key:
                 st2, st2 = key.split('correct')
-                return redirect(f"correct/{st2}")
-    result = common.get_data()
-    count_day = calendar.monthrange(common.year, common.months.index(common.select_name_month) + 1)[1]
-    if result is not None:
-        mas_data = list()
-        for data in result:
-            if data['6'] == 1:
-                if data['2'] is not None:
-                    data['2'] = round(data['2'], 2)
-                mas_data.append(data)
-        count = 0
-        if common.select_type != 'Сутки':
-            if common.select_type == 'Месяц':
-                count = count_day
-            else:
-                count = 12
-            for data in result:
-                if data['6'] == 2:  # нашли запись за сутки
-                    for i in range(len(mas_data)):
-                        if data['0'] == mas_data[i]['0']:  # нашли элемент для вывода
-                            i = 1
-                            while i <= count:
-                                ind = str(8 + i)
-                                try:
-                                    if data[ind] is not None:
-                                        if mas_data[i][ind] is None:
-                                            mas_data[i][ind] = 0
-                                        mas_data[i][ind] = round(mas_data[i][ind] + data[ind], 2)
-                                except:
-                                    print(ind, count, common.select_name_month)
-                                i += 1
-            for data in mas_data:
-                i = 1
-                while i <= count:
-                    ind = str(i + 8)
-                    if data[ind] is None:
-                        data[ind] = ""
-                    else:
-                        data[ind] = str(round(data[ind], 2))
-                    i += 1
-
-        st_date = str(common.select_year) + '-' + str(common.select_month).rjust(2, '0') + '-' + \
+                common.page_for_return = '/summary/'
+                return redirect("/correct/" + st2 +"/")
+        for key in request.form.keys():
+            if 'category_name_' in key:
+                st2, common.select_category_name = key.split('category_name_')
+    count, mas_data, moneys, summa_money, mas_structure = common.prepare_summary()
+    st_date = str(common.select_year) + '-' + str(common.select_month).rjust(2, '0') + '-' + \
               str(common.select_day).rjust(2, '0')
-        index = list()
-        for i in range(count):
-            index.append(str(i+9))
-        return render_template(
-            "summary.html", st_date=st_date, type_history=common.select_type, months=common.months,
-            select_name_month=common.select_name_month, year=common.year, datas=mas_data, count_day=count,
-            index=index)
+    index = list()
+    for i in range(count):
+        index.append(str(i+9))
+    return render_template(
+        "summary.html", st_date=st_date, type_history=common.select_type, months=common.months,
+        select_name_month=common.select_name_month, year=common.year, datas=mas_data, count_day=count,
+        index=index, moneys=moneys, summa_money="%.0f" % summa_money, mas_structure=mas_structure,
+        category_name=common.select_category_name)
 
 
 common.make_start()

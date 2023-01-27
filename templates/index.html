@@ -1,10 +1,10 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<form method="post" name="history">
+<form method="post" name="history" style="margin-left:0%;">
     <link rel="stylesheet" type="text/css" href="/static/css/index.css">
     <div id="combobox">
-        <p>Интервал для списка:
+        <p style="font-size:16px; font-weight: bold; color: red:">История расходов за:
             <select id="select_type" name="type_history">
             {% if type_history == "Месяц": %}
                     <option value="Сутки"> Сутки</option>

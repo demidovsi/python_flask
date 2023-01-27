@@ -2,6 +2,7 @@ import datetime
 import json
 import requests
 import time
+import calendar
 from requests.exceptions import HTTPError
 
 
@@ -24,6 +25,8 @@ select_month = None
 select_day = None
 select_type = 'Сутки'
 select_name_month = 'январь'
+select_category_name = ''
+page_for_return = None
 left = None
 right = None
 current_month = None
@@ -302,3 +305,79 @@ def get_data():
             select_month = time.gmtime().tm_mon
             select_day = time.gmtime().tm_mday
         return load_day(select_day, select_month, select_year)
+
+
+def prepare_summary():
+    mas_structure = list()
+    count = 0
+    summa_money = 0
+    moneys = []
+    mas_data = list()
+    result = get_data()
+    if result is not None:
+        if select_category_name != '':
+            guid = None
+            for data in result:
+                if data['6'] == 1 and data['1'] == select_category_name:
+                    guid = data['4']
+                    break
+            if guid is not None:
+                for data in result:
+                    if data['6'] == 2 and data['5'] == guid:
+                        data['2'] = "%.2f" % data['2']
+                        mas_structure.append(data)
+
+        for data in result:
+            if data['6'] == 1:
+                if data['2'] is not None:
+                    data['2'] = round(data['2'], 2)
+                mas_data.append(data)
+        count = 0
+        if select_type != 'Сутки':
+            if select_type == 'Месяц':
+                count = calendar.monthrange(year, months.index(select_name_month) + 1)[1]
+            else:
+                count = 12
+            # подготовим массив колонок для суммирования
+            for data in mas_data:
+                for i in range(count):
+                    data[str(i + 9)] = 0
+            # расчет (суммирование) по колонкам выходной таблицы
+            for data in result:
+                if data['6'] == 1:
+                    continue
+                for i in range(len(mas_data)):
+                    if data['0'] != mas_data[i]['0']:  # не совпадают категории расходов
+                        continue
+                    for j in range(count):  # цикл по количеству дней или месяцев
+                        ind = str(9 + j)
+                        try:
+                            if data[ind] is not None:
+                                mas_data[i][ind] = round(mas_data[i][ind] + data[ind], 2)
+                        except Exception as err:
+                            print(ind, count, select_name_month, f"{err}")
+            # заменим float на str
+            for data in mas_data:
+                for i in range(count):
+                    ind = str(i + 9)
+                    if data[ind] == 0:
+                        data[ind] = ""
+                    else:
+                        data[ind] = str(round(data[ind], 2))
+        # строка footer
+        moneys = [0] * count
+        for data in mas_data:
+            for i in range(count):
+                value = data[str(i + 9)]
+                if value is not None and value != '':
+                    moneys[i] = moneys[i] + float(value)
+        for i in range(count):
+            if moneys[i] == 0:
+                moneys[i] = ''
+            else:
+                moneys[i] = "%.0f" % moneys[i]
+
+        for data in mas_data:
+            if data['2'] is not None and data['2'] != '':
+                summa_money += data['2']
+    return count, mas_data, moneys, summa_money, mas_structure
