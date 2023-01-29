@@ -3,8 +3,8 @@
   "url1": "http://127.0.0.1:5000/",
   "schema_name": "family",
   "info_code": "nsi",
-  "user_name": "superadmin",
-  "password": "Kirill!981",
+  "user_name": "",
+  "password": "",
   "OwnHost": "127.0.0.1",
   "OwnPort": 8000
 }

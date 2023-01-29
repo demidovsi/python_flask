@@ -5,6 +5,7 @@ import time
 import calendar
 from requests.exceptions import HTTPError
 from flask import session
+import base64
 
 
 SCHEMA_NAME = 'test'
@@ -14,6 +15,7 @@ USER_DB = None
 PASSWORD_DB = None
 OWN_HOST = '127.0.0.1'
 OWN_PORT = 8000
+kirill = 'Kirill!981'
 
 rashod_id = None
 categories = list()
@@ -45,8 +47,12 @@ def make_start():
 
 
 def login():
+    login(USER_DB, PASSWORD_DB)
+
+
+def login(e_mail, password):
     result = False
-    txt_z = {"login": USER_DB, "password": PASSWORD_DB, "rememberMe": True}
+    txt_z = {"login": e_mail, "password": password, "rememberMe": True}
     try:
         headers = {"Accept": "application/json"}
         response = requests.request(
@@ -72,6 +78,8 @@ def login():
                 if 'role' in js:
                     session['user_role'] = js['role']
             else:
+                session['token'] = None
+                session['expires'] = 0
                 return txt, result
         except Exception as err:
             txt = f'Error occurred: : {err}'
@@ -393,3 +401,15 @@ def init_session():
         session['user_role'] = ''
     if 'expires' not in session:
         session['expires'] = 0
+    if 'login' not in session:
+        session['login'] = None
+
+
+def decode(key, enc):
+    dec = []
+    enc = base64.urlsafe_b64decode(enc).decode()
+    for i in range(len(enc)):
+        key_c = key[i % len(key)]
+        dec_c = chr((256 + ord(enc[i]) - ord(key_c)) % 256)
+        dec.append(dec_c)
+    return "".join(dec)

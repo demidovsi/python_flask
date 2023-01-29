@@ -1,28 +1,76 @@
 import json
 from flask import Flask
-from flask import render_template, request, url_for, flash, redirect, session
-from flask_sqlalchemy import SQLAlchemy
-from flask_login import LoginManager
-from flask_migrate import Migrate
-from config import Config
-import calendar
+from flask import render_template, request, url_for, flash, redirect, session, g
+# from flask_sqlalchemy import SQLAlchemy
+# from flask_login import LoginManager
+# from flask_migrate import Migrate
+# from config import Config
+# import calendar
 import common
 import time
 import datetime
+# from datetime import datetime
+# import sqlite3
 
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'my secret key'
-app.permanent_session_lifetime = datetime.timedelta(days=365)
+
+# app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///mysql.db'
+# app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.permanent_session_lifetime = datetime.timedelta(hours=1)
+# DATABASE = '/db/mysql.db'
 # db = SQLAlchemy(app)
-# migrate = Migrate(app, db)
-# login = LoginManager(app)
-# login.login_view = 'login'
+
+
+# def get_db():
+#     """ Возвращает объект соединения с БД"""
+#     db = getattr(g, '_database', None)
+#     if db is None:
+#         db = g._database = sqlite3.connect(DATABASE)
+#         db.row_factory = sqlite3.Row
+#     return db
+#
+#
+# def query_db(query, args=(), one=False):
+#     cur = get_db().execute(query, args)
+#     rv = cur.fetchall()
+#     cur.close()
+#     return (rv[0] if rv else None) if one else rv
+#
+#
+# @app.teardown_appcontext
+# def close_connection(exception):
+#     """Закрывает соединение с с БД"""
+#     db = getattr(g, '_database', None)
+#     if db is not None:
+#         db.close()
+
+
+# class User(db.Model):
+#     __tablename__ = 'users'
+#     id = db.Column(db.Integer(), primary_key=True)
+#     name = db.Column(db.String(100))
+#     username = db.Column(db.String(50), nullable=False, unique=True)
+#     email = db.Column(db.String(100), nullable=False, unique=True)
+#     password_hash = db.Column(db.String(100), nullable=False)
+#     created_on = db.Column(db.DateTime(), default=datetime.utcnow)
+#     updated_on = db.Column(db.DateTime(), default=datetime.utcnow,  onupdate=datetime.utcnow)
+#
+#     def __repr__(self):
+#     	return "<{}:{}>".format(self.id, self.username)
+#
+#
+# создать базу и таблицу пользователей в ней
+# with app.app_context():
+#     db.create_all()
 
 
 @app.route('/', methods=('GET', 'POST'))
 def index():
     common.init_session()
+    if session['login'] is None:
+        return redirect('/login/')
     common.clear_current()
     if request.method == 'POST':
         common.get_current(request)
@@ -56,6 +104,8 @@ def index():
 @app.route('/create/', methods=('GET', 'POST'))
 def create():
     common.init_session()
+    if session['login'] is None:
+        return redirect('/login/')
     st_date = str(time.gmtime().tm_year) + '-' + str(time.gmtime().tm_mon).rjust(2, '0') + '-' + \
               str(time.gmtime().tm_mday).rjust(2, '0')
     if request.method == 'POST':
@@ -106,6 +156,8 @@ def create():
 @app.route('/correct/<int:obj_id>/', methods=('GET', 'POST'))
 def correct(obj_id):
     common.init_session()
+    if session['login'] is None:
+        return redirect('/login/')
     if request.method == 'POST' and 'dt' in request.form and request.form['dt']:
         money = request.form['money']
         comment = request.form['comment']
@@ -168,12 +220,16 @@ def correct(obj_id):
 @app.route('/category/')
 def category():
     common.init_session()
+    if session['login'] is None:
+        return redirect('/login/')
     return render_template("categories.html", title="Категории расходов", categories=common.categories)
 
 
 @app.route('/summary/', methods=('GET', 'POST'))
 def summary():
     common.init_session()
+    if session['login'] is None:
+        return redirect('/login/')
     common.clear_current()
     if request.method == 'POST':
         common.get_current(request)
@@ -196,6 +252,32 @@ def summary():
         select_name_month=session['select_name_month'], year=session['year'], datas=mas_data, count_day=count,
         index=index, moneys=moneys, summa_money="%.0f" % summa_money, mas_structure=mas_structure,
         category_name=session['select_category_name'])
+
+
+@app.route('/login/', methods=('GET', 'POST'))
+def login():
+    common.init_session()
+    if request.method == 'POST':
+        user_name = request.form.get('user_name')
+        password = request.form.get('password')
+        txt, result = common.login(user_name, password)
+        if not result:
+            flash('Ошибка login = ' + txt)
+            return render_template('login.html', message='Нет такого пользователя')
+        token = common.decode(common.kirill, session['token'])
+        if 'family' not in token:
+            flash('Для пользователя нет доступа к базе данных')
+            return render_template('login.html', message='Для пользователя нет доступа к базе данных')
+        session['login'] = json.loads(token)['family']
+        return redirect('/')
+    return render_template('login.html')
+
+
+@app.route('/logout/', methods=('GET', 'POST'))
+def logout():
+    common.init_session()
+    session['login'] = None
+    return redirect('/login/')
 
 
 common.make_start()
