@@ -1,6 +1,6 @@
 import json
 from flask import Flask
-from flask import render_template, request, url_for, flash, redirect
+from flask import render_template, request, url_for, flash, redirect, session
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
 from flask_migrate import Migrate
@@ -8,10 +8,12 @@ from config import Config
 import calendar
 import common
 import time
+import datetime
 
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'my secret key'
+app.permanent_session_lifetime = datetime.timedelta(days=365)
 # db = SQLAlchemy(app)
 # migrate = Migrate(app, db)
 # login = LoginManager(app)
@@ -20,12 +22,14 @@ app.config['SECRET_KEY'] = 'my secret key'
 
 @app.route('/', methods=('GET', 'POST'))
 def index():
+    common.init_session()
     common.clear_current()
     if request.method == 'POST':
         common.get_current(request)
         for key in request.form.keys():
             if 'delete' in key:
                 st2, st2 = key.split('delete')
+                common.define_rashod_id()
                 print('Надо удалить расход с id= ' + st2)
         for key in request.form.keys():
             if 'correct' in key:
@@ -34,8 +38,8 @@ def index():
 
     result = common.get_data()
     if result is not None:
-        st_date = str(common.select_year) + '-' + str(common.select_month).rjust(2, '0') + '-' + \
-                  str(common.select_day).rjust(2, '0')
+        st_date = str(session['select_year']) + '-' + str(session['select_month']).rjust(2, '0') + '-' + \
+                  str(session['select_day']).rjust(2, '0')
         datas = common.make_answer(result)
         moneys = 0
         for data in datas:
@@ -44,13 +48,14 @@ def index():
             except Exception as err:
                 print('error money', f"{err}", data)
         return render_template(
-            "index.html", datas=datas, st_date=st_date, type_history=common.select_type, months=common.months,
-            select_name_month=common.select_name_month, year=common.year, count_datas=len(datas),
+            "index.html", datas=datas, st_date=st_date, type_history=session['select_type'], months=common.months,
+            select_name_month=session['select_name_month'], year=session['year'], count_datas=len(datas),
             moneys=round(moneys, 2))
 
 
 @app.route('/create/', methods=('GET', 'POST'))
 def create():
+    common.init_session()
     st_date = str(time.gmtime().tm_year) + '-' + str(time.gmtime().tm_mon).rjust(2, '0') + '-' + \
               str(time.gmtime().tm_mday).rjust(2, '0')
     if request.method == 'POST':
@@ -88,9 +93,9 @@ def create():
                 if not result:
                     flash(answer)
                 else:
-                    if common.page_for_return is not None:
-                        st = common.page_for_return
-                        common.page_for_return = None
+                    if 'page_for_return' in session and session['page_for_return'] is not None:
+                        st = session['page_for_return']
+                        session['page_for_return'] = None
                         return redirect(st)
                     return redirect(url_for('index'))
     return render_template(
@@ -100,6 +105,7 @@ def create():
 
 @app.route('/correct/<int:obj_id>/', methods=('GET', 'POST'))
 def correct(obj_id):
+    common.init_session()
     if request.method == 'POST' and 'dt' in request.form and request.form['dt']:
         money = request.form['money']
         comment = request.form['comment']
@@ -133,15 +139,15 @@ def correct(obj_id):
                 if not result:
                     flash(answer)
                 else:
-                    if common.page_for_return is not None:
-                        st = common.page_for_return
-                        common.page_for_return = None
+                    if 'page_for_return' in session and session['page-for_return'] is not None:
+                        st = session['page_for_return']
+                        session['page_for_return'] = None
                         return redirect(st)
                     year, month, day = dt.split('-')
-                    common.select_type = 'Сутки'
-                    common.select_year = int(year)
-                    common.select_month = int(month)
-                    common.select_day = int(day)
+                    session['select_type'] = 'Сутки'
+                    session['select_year'] = int(year)
+                    session['select_month'] = int(month)
+                    session['select_day'] = int(day)
                     return redirect(url_for('index'))
     else:
         answer, result, status_result = common.send_rest('v1/object/family/rashod/' + str(obj_id))
@@ -161,37 +167,38 @@ def correct(obj_id):
 
 @app.route('/category/')
 def category():
+    common.init_session()
     return render_template("categories.html", title="Категории расходов", categories=common.categories)
 
 
 @app.route('/summary/', methods=('GET', 'POST'))
 def summary():
+    common.init_session()
     common.clear_current()
     if request.method == 'POST':
         common.get_current(request)
         for key in request.form.keys():
             if 'correct' in key:
                 st2, st2 = key.split('correct')
-                common.page_for_return = '/summary/'
+                session['page_for_return'] = '/summary/'
                 return redirect("/correct/" + st2 +"/")
         for key in request.form.keys():
             if 'category_name_' in key:
-                st2, common.select_category_name = key.split('category_name_')
+                st2, session['select_category_name'] = key.split('category_name_')
     count, mas_data, moneys, summa_money, mas_structure = common.prepare_summary()
-    st_date = str(common.select_year) + '-' + str(common.select_month).rjust(2, '0') + '-' + \
-              str(common.select_day).rjust(2, '0')
+    st_date = str(session['select_year']) + '-' + str(session['select_month']).rjust(2, '0') + '-' + \
+              str(session['select_day']).rjust(2, '0')
     index = list()
     for i in range(count):
         index.append(str(i+9))
     return render_template(
-        "summary.html", st_date=st_date, type_history=common.select_type, months=common.months,
-        select_name_month=common.select_name_month, year=common.year, datas=mas_data, count_day=count,
+        "summary.html", st_date=st_date, type_history=session['select_type'], months=common.months,
+        select_name_month=session['select_name_month'], year=session['year'], datas=mas_data, count_day=count,
         index=index, moneys=moneys, summa_money="%.0f" % summa_money, mas_structure=mas_structure,
-        category_name=common.select_category_name)
+        category_name=session['select_category_name'])
 
 
 common.make_start()
-common.define_rashod_id()
 common.load_categories()
 
 app.run(port=common.OWN_PORT, host=common.OWN_HOST, debug=True)

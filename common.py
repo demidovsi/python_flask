@@ -4,6 +4,7 @@ import requests
 import time
 import calendar
 from requests.exceptions import HTTPError
+from flask import session
 
 
 SCHEMA_NAME = 'test'
@@ -13,26 +14,10 @@ USER_DB = None
 PASSWORD_DB = None
 OWN_HOST = '127.0.0.1'
 OWN_PORT = 8000
-app_lang = 'ru'
-token = ''
-expires = None
-user_role = None
+
 rashod_id = None
 categories = list()
 
-select_year = None
-select_month = None
-select_day = None
-select_type = 'Сутки'
-select_name_month = 'январь'
-select_category_name = ''
-page_for_return = None
-left = None
-right = None
-current_month = None
-current_year = None
-current_day = None
-year = 2023
 months = ['январь', 'февраль', 'март', 'апрель', 'май', 'июнь', 'июль', 'август', 'сентябрь', 'октябрь', 'ноябрь',
           'декабрь']
 
@@ -60,8 +45,6 @@ def make_start():
 
 
 def login():
-    global token, expires, app_lang, user_role
-    txt = ''
     result = False
     txt_z = {"login": USER_DB, "password": PASSWORD_DB, "rememberMe": True}
     try:
@@ -81,13 +64,13 @@ def login():
             if result:
                 js = json.loads(txt)
                 if "accessToken" in js:
-                    token = js["accessToken"]
+                    session['token'] = js["accessToken"]
                 if "expires" in js:
-                    expires = time.mktime(time.strptime(js["expires"], '%Y-%m-%d %H:%M:%S'))
+                    session['expires'] = time.mktime(time.strptime(js["expires"], '%Y-%m-%d %H:%M:%S'))
                 if 'lang' in js:
-                    app_lang = js['lang']
+                    session['app_lang'] = js['lang']
                 if 'role' in js:
-                    user_role = js['role']
+                    session['user_role'] = js['role']
             else:
                 return txt, result
         except Exception as err:
@@ -100,9 +83,9 @@ def send_rest(mes, directive="GET", params=None, lang='', token_user=None):
     if token_user is not None:
         js['token'] = token_user
     else:
-        js['token'] = token  # токен при login
+        js['token'] = session['token']  # токен при login
     if lang == '':
-        lang = app_lang
+        lang = session['app_lang']
     if directive == 'GET' and 'lang=' not in mes:
         if '?' in mes:
             mes = mes + '&lang=' + lang
@@ -229,82 +212,78 @@ def translateToBase(st):
 
 def load_categories():
     global categories
-    answer, result, status_result = send_rest('v1/objects/family/categor')
+    answer, result, status_result = send_rest('v1/objects/family/categor', token_user='', lang='en')
     if result:
         answer = json.loads(answer)
         categories = answer['values']
 
 
 def clear_current():
-    global left, right, current_month, current_year, current_day
-    left = None
-    right = None
-    current_month = None
-    current_year = None
-    current_day = None
+    session['left'] = None
+    session['right'] = None
+    session['current_month'] = None
+    session['current_year'] = None
+    session['current_day'] = None
 
 
 def get_current(request):
-    global select_type, select_year, select_month, select_day, select_name_month, year, left, right, current_month, \
-        current_year, current_day
     if 'dt_start' in request.form:
-        select_year, select_month, select_day = request.form['dt_start'].split('-')
-        select_year = int(select_year)
-        select_month = int(select_month)
-        select_day = int(select_day)
+        session['select_year'], session['select_month'], session['select_day'] = request.form['dt_start'].split('-')
+        session['select_year'] = int(session['select_year'])
+        session['select_month'] = int(session['select_month'])
+        session['select_day'] = int(session['select_day'])
     if 'type_history' in request.form:
-        select_type = request.form['type_history']
+        session['select_type'] = request.form['type_history']
     if 'select_month' in request.form:
-        select_name_month = request.form['select_month']
+        session['select_month'] = request.form['select_month']
     if 'select_name_month' in request.form:
-        select_name_month = request.form['select_name_month']
+        session['select_name_month'] = request.form['select_name_month']
     if 'year' in request.form:
-        year = int(request.form['year'])
-    left = request.form.get('left')
-    right = request.form.get('right')
-    current_month = request.form.get('current_month')
-    current_year = request.form.get('current_year')
-    current_day = request.form.get('current_day')
+        session['year'] = int(request.form['year'])
+    session['left'] = request.form.get('left')
+    session['right'] = request.form.get('right')
+    session['current_month'] = request.form.get('current_month')
+    session['current_year'] = request.form.get('current_year')
+    session['current_day'] = request.form.get('current_day')
 
 
 def get_data():
-    global select_year, year, select_name_month, select_month, select_day, months
-    if select_year is None:
-        select_year = time.gmtime().tm_year
-        select_month = time.gmtime().tm_mon
-        select_day = time.gmtime().tm_mday
-
-    if select_type == 'Год':
-        if left:
-            year = year - 1
+    global months
+    if 'select_year' not in session:
+        session['select_year'] = time.gmtime().tm_year
+        session['select_month'] = time.gmtime().tm_mon
+        session['select_day'] = time.gmtime().tm_mday
+    if session['select_type'] == 'Год':
+        if session['left']:
+            session['year'] = session['year'] - 1
         if right:
-            year = year + 1
-        if current_year:
-            year = time.gmtime().tm_year
-        return load_year(year)
-    elif select_type == 'Месяц':
-        month = months.index(select_name_month) + 1
-        if left:
-            year, month = calc_month(year, month, -1)
-        if right:
-            year, month = calc_month(year, month, 1)
-        if current_month:
-            year = time.gmtime().tm_year
+            session['year'] = session['year'] + 1
+        if session['current_year']:
+            session['year'] = time.gmtime().tm_year
+        return load_year(session['year'])
+    elif session['select_type'] == 'Месяц':
+        month = months.index(session['select_name_month']) + 1
+        if session['left']:
+            session['year'], month = calc_month(session['year'], month, -1)
+        if session['right']:
+            session['year'], month = calc_month(session['year'], month, 1)
+        if session['current_month']:
+            session['year'] = time.gmtime().tm_year
             month = time.gmtime().tm_mon
-        select_name_month = months[month - 1]
-        return load_month(month, year)
+        session['select_name_month'] = months[month - 1]
+        return load_month(month, session['year'])
     else:
-        if left:
-            select_year, select_month, select_day = \
-                calc_day(select_year, select_month, select_day, -1)
-        if right:
-            select_year, select_month, select_day = \
-                calc_day(select_year, select_month, select_day, 1)
-        if current_day:
-            select_year = time.gmtime().tm_year
-            select_month = time.gmtime().tm_mon
-            select_day = time.gmtime().tm_mday
-        return load_day(select_day, select_month, select_year)
+        if session['left']:
+            session['select_year'], session['select_month'], session['select_day'] = \
+                calc_day(session['select_year'], session['select_month'], session['select_day'], -1)
+        if session['right']:
+            session['select_year'], session['select_month'], session['select_day'] = \
+                calc_day(session['select_year'], session['select_month'], session['select_day'], 1)
+        if session['current_day']:
+            session['select_year'] = time.gmtime().tm_year
+            session['select_month'] = time.gmtime().tm_mon
+            session['select_day'] = time.gmtime().tm_mday
+        return load_day(session['select_day'], session['select_month'], session['select_year'])
 
 
 def prepare_summary():
@@ -315,10 +294,10 @@ def prepare_summary():
     mas_data = list()
     result = get_data()
     if result is not None:
-        if select_category_name != '':
+        if session['select_category_name'] != '':
             guid = None
             for data in result:
-                if data['6'] == 1 and data['1'] == select_category_name:
+                if data['6'] == 1 and data['1'] == session['select_category_name']:
                     guid = data['4']
                     break
             if guid is not None:
@@ -333,9 +312,9 @@ def prepare_summary():
                     data['2'] = round(data['2'], 2)
                 mas_data.append(data)
         count = 0
-        if select_type != 'Сутки':
-            if select_type == 'Месяц':
-                count = calendar.monthrange(year, months.index(select_name_month) + 1)[1]
+        if session['select_type'] != 'Сутки':
+            if session['select_type'] == 'Месяц':
+                count = calendar.monthrange(session['year'], months.index(session['select_name_month']) + 1)[1]
             else:
                 count = 12
             # подготовим массив колонок для суммирования
@@ -355,7 +334,7 @@ def prepare_summary():
                             if data[ind] is not None:
                                 mas_data[i][ind] = round(mas_data[i][ind] + data[ind], 2)
                         except Exception as err:
-                            print(ind, count, select_name_month, f"{err}")
+                            print(ind, count, session['select_name_month'], f"{err}")
             # заменим float на str
             for data in mas_data:
                 for i in range(count):
@@ -368,6 +347,7 @@ def prepare_summary():
         moneys = [0] * count
         for data in mas_data:
             for i in range(count):
+
                 value = data[str(i + 9)]
                 if value is not None and value != '':
                     moneys[i] = moneys[i] + float(value)
@@ -376,8 +356,40 @@ def prepare_summary():
                 moneys[i] = ''
             else:
                 moneys[i] = "%.0f" % moneys[i]
-
         for data in mas_data:
             if data['2'] is not None and data['2'] != '':
                 summa_money += data['2']
     return count, mas_data, moneys, summa_money, mas_structure
+
+
+def init_session():
+    if 'select_type' not in session:
+        session['select_type'] = 'Сутки'
+    if 'select_name_month' not in session:
+        session['select_name_month'] = 'январь'
+    if 'year' not in session:
+        session['year'] = time.gmtime().tm_year
+    if 'select_category_name' not in session:
+        session['select_category_name'] = ''
+    if 'current_year' not in session:
+        session['current_year']= None
+    if 'current_month' not in session:
+        session['current_month']= None
+    if 'current_day' not in session:
+        session['current_day']= None
+    if 'current_day' not in session:
+        session['current_day'] = None
+    if 'current_day' not in session:
+        session['current_day'] = None
+    if 'select_month' not in session:
+        session['select_month'] = time.gmtime().tm_mon
+    if 'select_day' not in session:
+        session['select_day'] = time.gmtime().tm_mday
+    if 'token' not in session:
+        session['token'] = ''
+    if 'app_lang' not in session:
+        session['app_lang'] = 'ru'
+    if 'user_role' not in session:
+        session['user_role'] = ''
+    if 'expires' not in session:
+        session['expires'] = 0

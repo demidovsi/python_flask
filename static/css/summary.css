@@ -13,8 +13,8 @@ table, th, td
 
 th
 {
-    background: #E0FFFF;
     background: #ffc107;
+    background: #E0FFFF;
     color: blue;
 }
 
