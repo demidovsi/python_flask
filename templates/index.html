@@ -1,10 +1,10 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<form method="post" name="history" style="margin-left:0%;">
-    <link rel="stylesheet" type="text/css" href="/static/css/index.css">
+<link rel="stylesheet" type="text/css" href="/static/css/index.css">
+<form method="post" name="history">
     <div id="combobox">
-        <p style="font-size:16px; font-weight: bold; color: red:">История расходов за:
+        <p style="font-size:16px; font-weight: bold; color: red;">История расходов за:
             <select id="select_type" name="type_history">
             {% if type_history == "Месяц": %}
                     <option value="Сутки"> Сутки</option>
@@ -22,7 +22,7 @@
                     <option value="Год"> Год</option>
             {% endif %}
             </select>
-            <button type="submit" class="btn btn-primary">Выполнить</button>
+            <button type="submit" class="btn btn-success">Выполнить</button>
         </p>
         <p>
             <button name="left" value="-1"> <img src="/static/left.png" width="18" height="18"> </button>
@@ -61,7 +61,7 @@
             {% endif %}
         </p>
     </div>
-    <caption>Расходы за {{type_history}}</caption>
+    <p style="text-align: center; color: red; font-size:16px; font-weight: bold; ">Расходы за {{type_history}}</p>
 
     <table id="historyTable" class="table table-striped hover order-column">
         <thead>

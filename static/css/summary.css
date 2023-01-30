@@ -26,14 +26,7 @@ tfoot
     color: blue;
 }
 
-
-
-table {
-  /*  table-layout: fixed; */
+.container
+{
+    margin: 0px;
 }
-
-/*
-table td.first_td {
-    width: 300px;
-}
-*/

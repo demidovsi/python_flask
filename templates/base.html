@@ -11,6 +11,10 @@
     <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.25/css/dataTables.bootstrap5.css">
 
     <title>{% block title %} {% endblock %}</title>
+    <style>
+        #user_name { width: 300px; /* Ширина поля в пикселах */ }
+        #password { width: 300px; /* Ширина поля в пикселах */ }
+  </style>
   </head>
   <body>
 <!--        <img src="/static/image.jpg" alt="Моё тестовое изображение" width="600" height="400">-->
@@ -26,13 +30,13 @@
                     <a class="nav-link" href="{{url_for('summary')}}">Сводный отчет</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="{{url_for('create')}}">Новый</a>
+                    <a class="nav-link" href="{{url_for('create')}}">Добавить</a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link" href="{{url_for('category')}}">Категории</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="/logout/">Logout</a>
+                    <a class="nav-link" href="/logout/">Login</a>
                 </li>
             </ul>
         </div>

@@ -264,7 +264,7 @@ def get_data():
     if session['select_type'] == 'Год':
         if session['left']:
             session['year'] = session['year'] - 1
-        if right:
+        if session['right']:
             session['year'] = session['year'] + 1
         if session['current_year']:
             session['year'] = time.gmtime().tm_year
@@ -372,7 +372,7 @@ def prepare_summary():
 
 def init_session():
     if 'select_type' not in session:
-        session['select_type'] = 'Сутки'
+        session['select_type'] = 'Месяц'
     if 'select_name_month' not in session:
         session['select_name_month'] = 'январь'
     if 'year' not in session:
@@ -413,3 +413,7 @@ def decode(key, enc):
         dec_c = chr((256 + ord(enc[i]) - ord(key_c)) % 256)
         dec.append(dec_c)
     return "".join(dec)
+
+
+def is_directive_correct(directive):
+    return directive in session['login']

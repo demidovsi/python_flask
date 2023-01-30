@@ -1,7 +1,7 @@
 body
 {
     font-family:Verdana;
-    font-size:14px;
+    font-size:12px;
 }
 
 table, th, td
@@ -30,7 +30,7 @@ tfoot
     color: blue;
 }
 
-form
+.container
 {
-    margin-left: 0%;
+    margin: 0px;
 }

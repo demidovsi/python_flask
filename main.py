@@ -1,6 +1,7 @@
 import json
 from flask import Flask
 from flask import render_template, request, url_for, flash, redirect, session, g
+import webbrowser
 # from flask_sqlalchemy import SQLAlchemy
 # from flask_login import LoginManager
 # from flask_migrate import Migrate
@@ -9,16 +10,20 @@ from flask import render_template, request, url_for, flash, redirect, session, g
 import common
 import time
 import datetime
+import os
 # from datetime import datetime
 # import sqlite3
 
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = 'my secret key'
+# app.config['SECRET_KEY'] = 'my secret key'
+app.config['SECRET_KEY'] = os.urandom(20).hex()
+app.config['CSRF_ENABLED'] = True
+app.permanent = True
+app.permanent_session_lifetime = datetime.timedelta(hours=1)
 
 # app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///mysql.db'
 # app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.permanent_session_lifetime = datetime.timedelta(hours=1)
 # DATABASE = '/db/mysql.db'
 # db = SQLAlchemy(app)
 
@@ -135,19 +140,19 @@ def create():
             params["schema_name"] = common.SCHEMA_NAME
             params["object_code"] = 'rashod'
             params["values"] = values
-            answer, result = common.login()
+            # answer, result = common.login()
+            # if not result:
+            #     flash(answer)
+            # else:
+            answer, result, status_result = common.send_rest('v1/objects', 'PUT', params=params)
             if not result:
                 flash(answer)
             else:
-                answer, result, status_result = common.send_rest('v1/objects', 'PUT', params=params)
-                if not result:
-                    flash(answer)
-                else:
-                    if 'page_for_return' in session and session['page_for_return'] is not None:
-                        st = session['page_for_return']
-                        session['page_for_return'] = None
-                        return redirect(st)
-                    return redirect(url_for('index'))
+                if 'page_for_return' in session and session['page_for_return'] is not None:
+                    st = session['page_for_return']
+                    session['page_for_return'] = None
+                    return redirect(st)
+                return redirect(url_for('index'))
     return render_template(
         "create.html", st_date=st_date, categories=common.categories, title='Создание нового расхода',
         id=None, select_category=None, money=0)
@@ -183,24 +188,24 @@ def correct(obj_id):
             params["schema_name"] = common.SCHEMA_NAME
             params["object_code"] = 'rashod'
             params["values"] = values
-            answer, result = common.login()
+            # answer, result = common.login()
+            # if not result:
+            #     flash(answer)
+            # else:
+            answer, result, status_result = common.send_rest('v1/objects', 'PUT', params=params)
             if not result:
                 flash(answer)
             else:
-                answer, result, status_result = common.send_rest('v1/objects', 'PUT', params=params)
-                if not result:
-                    flash(answer)
-                else:
-                    if 'page_for_return' in session and session['page-for_return'] is not None:
-                        st = session['page_for_return']
-                        session['page_for_return'] = None
-                        return redirect(st)
-                    year, month, day = dt.split('-')
-                    session['select_type'] = 'Сутки'
-                    session['select_year'] = int(year)
-                    session['select_month'] = int(month)
-                    session['select_day'] = int(day)
-                    return redirect(url_for('index'))
+                if 'page_for_return' in session and session['page-for_return'] is not None:
+                    st = session['page_for_return']
+                    session['page_for_return'] = None
+                    return redirect(st)
+                year, month, day = dt.split('-')
+                session['select_type'] = 'Сутки'
+                session['select_year'] = int(year)
+                session['select_month'] = int(month)
+                session['select_day'] = int(day)
+                return redirect(url_for('index'))
     else:
         answer, result, status_result = common.send_rest('v1/object/family/rashod/' + str(obj_id))
         if result:
@@ -263,12 +268,15 @@ def login():
         txt, result = common.login(user_name, password)
         if not result:
             flash('Ошибка login = ' + txt)
-            return render_template('login.html', message='Нет такого пользователя')
+            return render_template('login.html')
         token = common.decode(common.kirill, session['token'])
         if 'family' not in token:
-            flash('Для пользователя нет доступа к базе данных')
-            return render_template('login.html', message='Для пользователя нет доступа к базе данных')
+            flash(f'Для пользователя {user_name} нет доступа к базе данных')
+            return render_template('login.html')
         session['login'] = json.loads(token)['family']
+        if 'visible' not in session['login']:
+            flash(f'Для пользователя {user_name} нет доступа к базе данных')
+            return render_template('login.html')
         return redirect('/')
     return render_template('login.html')
 
@@ -278,6 +286,18 @@ def logout():
     common.init_session()
     session['login'] = None
     return redirect('/login/')
+
+
+@app.route('/delete/<int:obj_id>/', methods=('GET', 'POST'))
+def delete(obj_id):
+    if request.method == 'POST':
+        if 'page_for_return' in session and session['page_for_return'] is not None:
+            st = session['page_for_return']
+            session['page_for_return'] = None
+            return redirect(st)
+        return redirect(url_for('index'))
+
+    return render_template("delete.html", obj_id=obj_id)
 
 
 common.make_start()

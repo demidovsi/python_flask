@@ -3,7 +3,7 @@
 {% block content1 %}
 <!--    <caption>Информация за {{type_history}}</caption>-->
 <form method="post" name="summary">
-    <table width="400" id="summaryTable" class="table table-striped hover order-column" table-layout="fixed">
+    <table width="1000" id="summaryTable" class="table table-striped hover order-column" table-layout="fixed">
         <thead>
             <tr>
                 <th scope="col">Тип расхода</th>
@@ -33,7 +33,7 @@
                 {% if data['2']: %}
                     <tr>
                         {% if data['1'] == category_name %}
-                            <td class="first_td"> <button style="color:red" name="category_name_{{data['1']}}"> {{data['1']}}</button></td>
+                        <td class="first_td"> <button style="color:red" name="category_name_{{data['1']}}"> {{data['1']}}</button></td>
                         {% else %}
                             <td class="first_td"> <button name="category_name_{{data['1']}}"> {{data['1']}}</button></td>
                         {% endif %}
