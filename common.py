@@ -9,10 +9,7 @@ import base64
 
 
 SCHEMA_NAME = 'test'
-INFO_CODE = 'nsi'
 URL = None
-USER_DB = None
-PASSWORD_DB = None
 OWN_HOST = '127.0.0.1'
 OWN_PORT = 8000
 kirill = 'Kirill!981'
@@ -25,34 +22,24 @@ months = ['январь', 'февраль', 'март', 'апрель', 'май'
 
 
 def make_start():
-    global URL, USER_DB, PASSWORD_DB, SCHEMA_NAME, INFO_CODE, OWN_HOST, OWN_PORT
+    global URL, SCHEMA_NAME, OWN_HOST, OWN_PORT
     f = open('config.json', 'r', encoding='utf-8')
     with f:
         data = f.read()
         data = json.loads(data)
         if 'url' in data:
             URL = data['url']
-        if 'user_name' in data:
-            USER_DB = data['user_name']
-        if 'password' in data:
-            PASSWORD_DB = data['password']
         if 'schema_name' in data:
             SCHEMA_NAME = data['schema_name']
-        if 'info_code' in data:
-            INFO_CODE = data['info_code']
         if 'OwnHost' in data and OWN_HOST is None:
             OWN_HOST = data['OwnHost']
         if 'OwnPort' in data and OWN_PORT is None:
             OWN_PORT = data['OwnPort']
 
 
-def login():
-    login(USER_DB, PASSWORD_DB)
-
-
 def login(e_mail, password):
     result = False
-    txt_z = {"login": e_mail, "password": password, "rememberMe": True}
+    txt_z = {"login": e_mail, "password": password, "rememberMe": True, "category": "family"}
     try:
         headers = {"Accept": "application/json"}
         response = requests.request(
@@ -164,7 +151,8 @@ def load_month(month, year):
     txt = 'v1/function/' + SCHEMA_NAME + '/p_history_rashod_month?text=' + params
     data, result, status_result = send_rest(txt)
     if result:
-        return json.loads(data)
+        return json.loads(data), ''
+    return None, data
 
 
 def load_day(day, month, year):
@@ -175,7 +163,8 @@ def load_day(day, month, year):
     txt = 'v1/function/' + SCHEMA_NAME + '/p_history_rashod?text=' + params
     data, result, status_result = send_rest(txt)
     if result:
-        return json.loads(data)
+        return json.loads(data), ''
+    return None, data
 
 
 def load_year(year):
@@ -185,7 +174,8 @@ def load_year(year):
     txt = 'v1/function/' + SCHEMA_NAME + '/p_history_rashod_year?text=' + params
     data, result, status_result = send_rest(txt)
     if result:
-        return json.loads(data)
+        return json.loads(data), ''
+    return None, data
 
 
 def calc_month(year, month, delta):
@@ -300,7 +290,7 @@ def prepare_summary():
     summa_money = 0
     moneys = []
     mas_data = list()
-    result = get_data()
+    result, error = get_data()
     if result is not None:
         if session['select_category_name'] != '':
             guid = None
@@ -401,8 +391,8 @@ def init_session():
         session['user_role'] = ''
     if 'expires' not in session:
         session['expires'] = 0
-    if 'login' not in session:
-        session['login'] = None
+    if 'rights' not in session:
+        session['rights'] = None
 
 
 def decode(key, enc):
@@ -416,4 +406,4 @@ def decode(key, enc):
 
 
 def is_directive_correct(directive):
-    return directive in session['login']
+    return directive in session['rights']

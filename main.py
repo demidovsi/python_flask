@@ -74,7 +74,7 @@ app.permanent_session_lifetime = datetime.timedelta(hours=1)
 @app.route('/', methods=('GET', 'POST'))
 def index():
     common.init_session()
-    if session['login'] is None:
+    if session['rights'] is None:
         return redirect('/login/')
     common.clear_current()
     if request.method == 'POST':
@@ -89,7 +89,7 @@ def index():
                 st2, st2 = key.split('correct')
                 return redirect(f"correct/{st2}")
 
-    result = common.get_data()
+    result, error = common.get_data()
     if result is not None:
         st_date = str(session['select_year']) + '-' + str(session['select_month']).rjust(2, '0') + '-' + \
                   str(session['select_day']).rjust(2, '0')
@@ -104,12 +104,15 @@ def index():
             "index.html", datas=datas, st_date=st_date, type_history=session['select_type'], months=common.months,
             select_name_month=session['select_name_month'], year=session['year'], count_datas=len(datas),
             moneys=round(moneys, 2))
+    else:
+        error = error + ' Пользователь = ' + session['user_name']
+        return error
 
 
 @app.route('/create/', methods=('GET', 'POST'))
 def create():
     common.init_session()
-    if session['login'] is None:
+    if session['rights'] is None:
         return redirect('/login/')
     st_date = str(time.gmtime().tm_year) + '-' + str(time.gmtime().tm_mon).rjust(2, '0') + '-' + \
               str(time.gmtime().tm_mday).rjust(2, '0')
@@ -161,7 +164,7 @@ def create():
 @app.route('/correct/<int:obj_id>/', methods=('GET', 'POST'))
 def correct(obj_id):
     common.init_session()
-    if session['login'] is None:
+    if session['rights'] is None:
         return redirect('/login/')
     if request.method == 'POST' and 'dt' in request.form and request.form['dt']:
         money = request.form['money']
@@ -225,7 +228,7 @@ def correct(obj_id):
 @app.route('/category/')
 def category():
     common.init_session()
-    if session['login'] is None:
+    if session['rights'] is None:
         return redirect('/login/')
     return render_template("categories.html", title="Категории расходов", categories=common.categories)
 
@@ -233,7 +236,7 @@ def category():
 @app.route('/summary/', methods=('GET', 'POST'))
 def summary():
     common.init_session()
-    if session['login'] is None:
+    if session['rights'] is None:
         return redirect('/login/')
     common.clear_current()
     if request.method == 'POST':
@@ -264,17 +267,23 @@ def login():
     common.init_session()
     if request.method == 'POST':
         user_name = request.form.get('user_name')
+        session['user_name'] = user_name
         password = request.form.get('password')
         txt, result = common.login(user_name, password)
         if not result:
             flash('Ошибка login = ' + txt)
             return render_template('login.html')
         token = common.decode(common.kirill, session['token'])
-        if 'family' not in token:
-            flash(f'Для пользователя {user_name} нет доступа к базе данных')
-            return render_template('login.html')
-        session['login'] = json.loads(token)['family']
-        if 'visible' not in session['login']:
+        # if 'family' not in token:
+        #     flash(f'Для пользователя {user_name} нет доступа к базе данных')
+        #     return render_template('login.html')
+        token = json.loads(token)
+        for key in token.keys():
+            common.SCHEMA_NAME = key
+            break
+        session['rights'] = token[common.SCHEMA_NAME]
+
+        if 'visible' not in session['rights']:
             flash(f'Для пользователя {user_name} нет доступа к базе данных')
             return render_template('login.html')
         return redirect('/')
@@ -284,7 +293,7 @@ def login():
 @app.route('/logout/', methods=('GET', 'POST'))
 def logout():
     common.init_session()
-    session['login'] = None
+    session['rights'] = None
     return redirect('/login/')
 
 
