@@ -37,10 +37,10 @@
                         {% else %}
                             <td class="first_td"> <button name="category_name_{{data['1']}}"> {{data['1']}}</button></td>
                         {% endif %}
-                        <td style="color:green; font-size:16px; font-weight: bold"><div align="right">{{data['2']}}</div> </td>
+                        <td style="color:green; font-size:14px; font-weight: bold;"><div align="right">{{data['2']}}</div> </td>
                         {% for ind in index: %}
                             {% if data[ind]: %}
-                                <td><div align="right">{{data[ind]}}</div></td>
+                                <td style="height: 10px;"><div align="right">{{data[ind]}}</div></td>
                             {% else %}
                                 <td></td>
                             {% endif %}
@@ -84,7 +84,6 @@
     </table>
 </form>
 {% endblock %}
-
 
 {% block scripts %}
   <script>

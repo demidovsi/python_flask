@@ -7,10 +7,19 @@ body
 table, th, td
 {
     border: 1px solid #0088ff;
-    font-family:Verdana;
-    font-size:12px;
+    font-family: Verdana;
+    font-size: 12px;
 }
 
+table {
+    border-collapse: collapse;
+    padding: 15px 15px;
+}
+
+td
+{
+    height: 12px;
+}
 th
 {
     background: #ffc107;
@@ -29,4 +38,11 @@ tfoot
 .container
 {
     margin: 0px;
+}
+
+/* для ширины 0-й колонки по содержимому */
+tr > :first-child {
+  width: 0;
+  white-space: nowrap;
+  vertical-align: top;
 }

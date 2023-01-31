@@ -23,6 +23,7 @@
             {% endif %}
             </select>
             <button type="submit" class="btn btn-success">Выполнить</button>
+            <input type="hidden" id="page_history" name="page_history" value="{{page_history}}">
         </p>
         <p>
             <button name="left" value="-1"> <img src="/static/left.png" width="18" height="18"> </button>
@@ -105,24 +106,35 @@
 
 {% block scripts %}
   <script>
-    $(document).ready(function () {
+    $(function() {
+        $(document).ready(function () {
+          var table=$('#historyTable').DataTable({
+            displayStart: document.querySelector('#page_history').value * 10,
+            order: [[4, "asc"]],
+            lengthMenu: [10, 25, 50],
+            columns: [
+              {orderable: true, searchable: true},
+              {orderable: true, searchable: true},
+              {orderable: true, searchable: true},
+              {orderable: true, searchable: true},
+              {orderable: true, searchable: true},
+              {orderable: true, searchable: true},
+              {orderable: false, searchable: false}
+             ],
+          });
 
-      $('#historyTable').DataTable({
-        columns: [
-          {orderable: true, searchable: true},
-          {orderable: true, searchable: true},
-          {orderable: true, searchable: true},
-          {orderable: true, searchable: true},
-          {orderable: true, searchable: true},
-          {orderable: true, searchable: true},
-          {orderable: false, searchable: false}
-         ],
-      });
+          $('#historyTable').on( 'page.dt', function ()
+          {
+               var info = table.page.info();
+               document.querySelector('#page_history').value = info.page;
+          });
 
-      $('#combobox').on('change', function() {
-            document.forms['history'].submit();
+          $('#combobox').on('change', function()
+          {
+                document.forms['history'].submit();
+          });
+
         });
-
     });
   </script>
 

@@ -30,6 +30,8 @@ def index():
         for key in request.form.keys():
             if 'correct' in key:
                 st2, st2 = key.split('correct')
+                if 'page_history' in request.form:
+                    session['page_history'] = request.form['page_history']
                 return redirect(f"correct/{st2}")
 
     result, error = common.get_data()
@@ -43,10 +45,15 @@ def index():
                 moneys = moneys + data['money']
             except Exception as err:
                 print('error money', f"{err}", data)
+        if 'page_history' in session:
+            page_history = session['page_history']
+        else:
+            page_history = 0
+        session['page_history'] = 0
         return render_template(
             "index.html", datas=datas, st_date=st_date, type_history=session['select_type'], months=common.months,
             select_name_month=session['select_name_month'], year=session['year'], count_datas=len(datas),
-            moneys=round(moneys, 2))
+            moneys=round(moneys, 2), page_history=int(page_history))
     else:
         error = error + ' Пользователь = ' + session['user_name']
         return error
@@ -134,15 +141,15 @@ def correct(obj_id):
             if not result:
                 flash(answer)
             else:
-                if 'page_for_return' in session and session['page-for_return'] is not None:
+                if 'page_for_return' in session and session['page_for_return'] is not None:
                     st = session['page_for_return']
                     session['page_for_return'] = None
                     return redirect(st)
-                year, month, day = dt.split('-')
-                session['select_type'] = 'Сутки'
-                session['select_year'] = int(year)
-                session['select_month'] = int(month)
-                session['select_day'] = int(day)
+                # year, month, day = dt.split('-')
+                # session['select_type'] = 'Сутки'
+                # session['select_year'] = int(year)
+                # session['select_month'] = int(month)
+                # session['select_day'] = int(day)
                 return redirect(url_for('index'))
     else:
         answer, result, status_result = common.send_rest('v1/object/family/rashod/' + str(obj_id))
