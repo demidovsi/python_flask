@@ -29,8 +29,6 @@ def make_start():
         data = json.loads(data)
         if 'url' in data:
             URL = data['url']
-        if 'schema_name' in data:
-            SCHEMA_NAME = data['schema_name']
         if 'OwnHost' in data and OWN_HOST is None:
             OWN_HOST = data['OwnHost']
         if 'OwnPort' in data and OWN_PORT is None:
@@ -403,7 +401,3 @@ def decode(key, enc):
         dec_c = chr((256 + ord(enc[i]) - ord(key_c)) % 256)
         dec.append(dec_c)
     return "".join(dec)
-
-
-def is_directive_correct(directive):
-    return directive in session['rights']

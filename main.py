@@ -1,74 +1,17 @@
 import json
 from flask import Flask
 from flask import render_template, request, url_for, flash, redirect, session, g
-import webbrowser
-# from flask_sqlalchemy import SQLAlchemy
-# from flask_login import LoginManager
-# from flask_migrate import Migrate
-# from config import Config
-# import calendar
 import common
 import time
 import datetime
 import os
-# from datetime import datetime
-# import sqlite3
 
 
 app = Flask(__name__)
-# app.config['SECRET_KEY'] = 'my secret key'
 app.config['SECRET_KEY'] = os.urandom(20).hex()
 app.config['CSRF_ENABLED'] = True
 app.permanent = True
 app.permanent_session_lifetime = datetime.timedelta(hours=1)
-
-# app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///mysql.db'
-# app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-# DATABASE = '/db/mysql.db'
-# db = SQLAlchemy(app)
-
-
-# def get_db():
-#     """ Возвращает объект соединения с БД"""
-#     db = getattr(g, '_database', None)
-#     if db is None:
-#         db = g._database = sqlite3.connect(DATABASE)
-#         db.row_factory = sqlite3.Row
-#     return db
-#
-#
-# def query_db(query, args=(), one=False):
-#     cur = get_db().execute(query, args)
-#     rv = cur.fetchall()
-#     cur.close()
-#     return (rv[0] if rv else None) if one else rv
-#
-#
-# @app.teardown_appcontext
-# def close_connection(exception):
-#     """Закрывает соединение с с БД"""
-#     db = getattr(g, '_database', None)
-#     if db is not None:
-#         db.close()
-
-
-# class User(db.Model):
-#     __tablename__ = 'users'
-#     id = db.Column(db.Integer(), primary_key=True)
-#     name = db.Column(db.String(100))
-#     username = db.Column(db.String(50), nullable=False, unique=True)
-#     email = db.Column(db.String(100), nullable=False, unique=True)
-#     password_hash = db.Column(db.String(100), nullable=False)
-#     created_on = db.Column(db.DateTime(), default=datetime.utcnow)
-#     updated_on = db.Column(db.DateTime(), default=datetime.utcnow,  onupdate=datetime.utcnow)
-#
-#     def __repr__(self):
-#     	return "<{}:{}>".format(self.id, self.username)
-#
-#
-# создать базу и таблицу пользователей в ней
-# with app.app_context():
-#     db.create_all()
 
 
 @app.route('/', methods=('GET', 'POST'))
@@ -143,10 +86,6 @@ def create():
             params["schema_name"] = common.SCHEMA_NAME
             params["object_code"] = 'rashod'
             params["values"] = values
-            # answer, result = common.login()
-            # if not result:
-            #     flash(answer)
-            # else:
             answer, result, status_result = common.send_rest('v1/objects', 'PUT', params=params)
             if not result:
                 flash(answer)
@@ -191,10 +130,6 @@ def correct(obj_id):
             params["schema_name"] = common.SCHEMA_NAME
             params["object_code"] = 'rashod'
             params["values"] = values
-            # answer, result = common.login()
-            # if not result:
-            #     flash(answer)
-            # else:
             answer, result, status_result = common.send_rest('v1/objects', 'PUT', params=params)
             if not result:
                 flash(answer)
@@ -274,9 +209,6 @@ def login():
             flash('Ошибка login = ' + txt)
             return render_template('login.html')
         token = common.decode(common.kirill, session['token'])
-        # if 'family' not in token:
-        #     flash(f'Для пользователя {user_name} нет доступа к базе данных')
-        #     return render_template('login.html')
         token = json.loads(token)
         for key in token.keys():
             common.SCHEMA_NAME = key
@@ -307,6 +239,41 @@ def delete(obj_id):
         return redirect(url_for('index'))
 
     return render_template("delete.html", obj_id=obj_id)
+
+
+@app.route('/char/', methods=('GET', 'POST'))
+def char():
+    common.init_session()
+    if session['rights'] is None:
+        return redirect('/login/')
+    common.clear_current()
+    if request.method == 'POST':
+        common.get_current(request)
+        for key in request.form.keys():
+            if 'correct' in key:
+                st2, st2 = key.split('correct')
+                session['page_for_return'] = '/summary/'
+                return redirect("/correct/" + st2 +"/")
+        for key in request.form.keys():
+            if 'category_name_' in key:
+                st2, session['select_category_name'] = key.split('category_name_')
+
+    st_date = str(session['select_year']) + '-' + str(session['select_month']).rjust(2, '0') + '-' + \
+              str(session['select_day']).rjust(2, '0')
+    count, mas_data, moneys, summa_money, mas_structure = common.prepare_summary()
+
+    x = list()
+    y = list()
+    for data in mas_data:
+        if data['2'] is None:
+            continue
+        x.append(data['1'])
+        y.append(float("%.2f" % (data['2'] / summa_money * 100)))
+    return render_template(
+        "char.html", st_date=st_date, type_history=session['select_type'], months=common.months,
+        select_name_month=session['select_name_month'], year=session['year'], labels=x, values=y,
+        legend='% Проценты к общей сумме расходов за период',
+        summa_money=int(summa_money))
 
 
 common.make_start()
