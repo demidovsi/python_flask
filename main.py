@@ -80,9 +80,9 @@ def create():
                 break
 
         if not money or float(money) == 0:
-            flash('Money is required!')
+            flash('Money is required!', 'warning')
         elif type(cat_id) == str:
-            flash('Тип расхода is required!')
+            flash('Тип расхода is required!', 'warning')
         else:
             values = dict()
             values["id"] = 0
@@ -96,12 +96,17 @@ def create():
             params["values"] = values
             answer, result, status_result = common.send_rest('v1/objects', 'PUT', params=params)
             if not result:
-                flash(answer)
+                flash(answer, 'warning')
             else:
                 if 'page_for_return' in session and session['page_for_return'] is not None:
                     st = session['page_for_return']
                     session['page_for_return'] = None
                     return redirect(st)
+                session['select_type'] = 'Сутки'
+                session['select_year'] = int(year)
+                session['select_month'] = int(month)
+                session['select_day'] = int(day)
+
                 return redirect(url_for('index'))
     return render_template(
         "create.html", st_date=st_date, categories=common.categories, title='Создание нового расхода',
@@ -189,6 +194,14 @@ def summary():
                 st2, st2 = key.split('correct')
                 session['page_for_return'] = '/summary/'
                 return redirect("/correct/" + st2 + "/")
+
+        for key in request.form.keys():
+            if 'delete' in key:
+                st2, st2 = key.split('delete')
+                common.define_rashod_id()
+                session['page_for_return'] = '/summary/'
+                return redirect('/delete/'+st2+'/')
+
         for key in request.form.keys():
             if 'category_name_' in key:
                 st2, session['select_category_name'] = key.split('category_name_')
@@ -215,7 +228,6 @@ def login():
     common.init_session()
     if request.method == 'POST':
         user_name = request.form.get('user_name')
-        session['user_name'] = user_name
         password = request.form.get('password')
         txt, result = common.login(user_name, password)
         if not result:
@@ -251,6 +263,16 @@ def test():
 @app.route('/delete/<int:obj_id>/', methods=('GET', 'POST'))
 def delete(obj_id):
     if request.method == 'POST':
+        if 'indexYes' in request.form:
+            st = request.form['indexYes']
+            if st != '':
+                token = session['token']
+                answer, result, status_result = common.send_rest('v1/object/' + str(common.rashod_id) + '/' +st,
+                                                                 'DELETE', token_user=token, lang='ru')
+                if not result:
+                    flash('ERROR: ' + answer, 'warning')
+                else:
+                    flash('Расход с ID = ' + st + ' успешно удален', 'success')
         if 'page_for_return' in session and session['page_for_return'] is not None:
             st = session['page_for_return']
             session['page_for_return'] = None

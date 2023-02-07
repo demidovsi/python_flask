@@ -1,8 +1,8 @@
 {% block content %}
 <!-- Кнопка активации -->
-<label class="btn" id="openDelete" for="modal-delete">Открыть</label>
+<label class="btn" id="openDelete" for="modal-delete" type="hidden"></label>
 <!-- Модальное окно -->
-<form method="post">
+<form method="post" name="form-delete">
 <div class="modal">
   <link rel="stylesheet" type="text/css" href="/static/css/delete.css">
 
@@ -12,22 +12,22 @@
     <label class="modal-overlay" for="modal-delete"></label>
     <div class="modal-dialog">
       <div class="modal-header">
-        <h1>Подтверждение удаления расходной статьи</h1>
+        <h2>Подтверждение удаления расходной статьи</h2>
         <label class="btn-close" for="modal-delete" aria-hidden="true">×</label>
       </div>
       <div class="modal-body">
-    <p style="align: center; color: red;">Действительно удалить расход {{obj_id}}?</p>
+    <p style="text-align: center; color: red;">Действительно удалить расход ID = {{obj_id}}?</p>
       </div>
       <div class="modal-footer">
-          <form action="/delete/1/" method="POST">
+          <form action="/delete/{{obj_id}}/" method="POST">
               <!-- скрытый параметр -->
-              <input type="hidden" name="index" value="1">
+              <input type="hidden" name="indexYes" value="{{obj_id}}" class="result">
               <input type="submit" class="btn btn-primary" value="Да">
           </form>
           <p></p>
-          <form action="/delete/1/" method="POST">
+          <form action="/delete/{{obj_id}}/" method="POST">
               <!-- скрытый параметр -->
-              <input type="hidden" name="index" value="0">
+              <input type="hidden" name="indexNo" value="{{obj_id}}" class="result">
               <input type="submit" class="btn btn-primary" value="Нет">
           </form>
       </div>
@@ -36,3 +36,31 @@
 </div>
 </form>
 {% endblock %}
+
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+
+<script>
+    $(function ()
+    {
+        $(document).ready(function () {
+            var els = document.querySelector("#openDelete");
+            els.click();
+        });
+
+       $('.btn-close').click(function (e) {
+            var els = document.querySelector(".result");
+            els.value = null;
+            console.log('btn-close.click');
+            $(this).removeClass('result');
+            document.forms['form-delete'].submit();
+       });
+
+       $('.modal').mouseup(function (e) {
+          let modalContent = $(".modal__content");
+          if (!modalContent.is(e.target) && modalContent.has(e.target).length === 0) {
+            $(this).removeClass('modal_active');
+            $('body').removeClass('hidden');
+          }
+       });
+    });
+</script>
