@@ -1,6 +1,6 @@
 import json
 from flask import Flask
-from flask import render_template, request, url_for, flash, redirect, session, g
+from flask import render_template, request, url_for, flash, redirect, session
 import common
 import time
 import datetime
@@ -26,7 +26,8 @@ def index():
             if 'delete' in key:
                 st2, st2 = key.split('delete')
                 common.define_rashod_id()
-                print('Надо удалить расход с id= ' + st2)
+                return redirect('/delete/'+st2+'/')
+                # print('Надо удалить расход с id= ' + st2)
         for key in request.form.keys():
             if 'correct' in key:
                 st2, st2 = key.split('correct')
@@ -65,7 +66,7 @@ def create():
     if session['rights'] is None:
         return redirect('/login/')
     st_date = str(time.gmtime().tm_year) + '-' + str(time.gmtime().tm_mon).rjust(2, '0') + '-' + \
-              str(time.gmtime().tm_mday).rjust(2, '0')
+        str(time.gmtime().tm_mday).rjust(2, '0')
     if request.method == 'POST':
         money = request.form['money']
         comment = request.form['comment']
@@ -91,7 +92,7 @@ def create():
             values['comment'] = common.translateToBase(comment)
             params = dict()
             params["schema_name"] = common.SCHEMA_NAME
-            params["object_code"] = 'rashod'
+            params["object_code"] = common.object_code
             params["values"] = values
             answer, result, status_result = common.send_rest('v1/objects', 'PUT', params=params)
             if not result:
@@ -135,7 +136,7 @@ def correct(obj_id):
             values['comment'] = common.translateToBase(comment)
             params = dict()
             params["schema_name"] = common.SCHEMA_NAME
-            params["object_code"] = 'rashod'
+            params["object_code"] = common.object_code
             params["values"] = values
             answer, result, status_result = common.send_rest('v1/objects', 'PUT', params=params)
             if not result:
@@ -152,7 +153,7 @@ def correct(obj_id):
                 # session['select_day'] = int(day)
                 return redirect(url_for('index'))
     else:
-        answer, result, status_result = common.send_rest('v1/object/family/rashod/' + str(obj_id))
+        answer, result, status_result = common.send_rest('v1/object/family/' + common.object_code + '/' + str(obj_id))
         if result:
             answer = json.loads(answer)[0]
             comment = common.translateFromBase(answer['comment'])
@@ -187,21 +188,26 @@ def summary():
             if 'correct' in key:
                 st2, st2 = key.split('correct')
                 session['page_for_return'] = '/summary/'
-                return redirect("/correct/" + st2 +"/")
+                return redirect("/correct/" + st2 + "/")
         for key in request.form.keys():
             if 'category_name_' in key:
                 st2, session['select_category_name'] = key.split('category_name_')
     count, mas_data, moneys, summa_money, mas_structure = common.prepare_summary()
     st_date = str(session['select_year']) + '-' + str(session['select_month']).rjust(2, '0') + '-' + \
-              str(session['select_day']).rjust(2, '0')
-    index = list()
+        str(session['select_day']).rjust(2, '0')
+    index_column = list()
     for i in range(count):
-        index.append(str(i+9))
+        index_column.append(str(i+9))
+    if 'page_summary' in session:
+        page_summary = session['page_summary']
+    else:
+        page_summary = 0
+    session['page_summary'] = 0
     return render_template(
         "summary.html", st_date=st_date, type_history=session['select_type'], months=common.months,
         select_name_month=session['select_name_month'], year=session['year'], datas=mas_data, count_day=count,
-        index=index, moneys=moneys, summa_money="%.0f" % summa_money, mas_structure=mas_structure,
-        category_name=session['select_category_name'])
+        index=index_column, moneys=moneys, summa_money="%.0f" % summa_money, mas_structure=mas_structure,
+        category_name=session['select_category_name'], page_summary=page_summary)
 
 
 @app.route('/login/', methods=('GET', 'POST'))
@@ -236,6 +242,12 @@ def logout():
     return redirect('/login/')
 
 
+@app.route('/test/', methods=('GET', 'POST'))
+def test():
+    return render_template('test.html')
+    # return redirect('/test/#openModal')
+
+
 @app.route('/delete/<int:obj_id>/', methods=('GET', 'POST'))
 def delete(obj_id):
     if request.method == 'POST':
@@ -260,13 +272,13 @@ def char():
             if 'correct' in key:
                 st2, st2 = key.split('correct')
                 session['page_for_return'] = '/summary/'
-                return redirect("/correct/" + st2 +"/")
+                return redirect("/correct/" + st2 + "/")
         for key in request.form.keys():
             if 'category_name_' in key:
                 st2, session['select_category_name'] = key.split('category_name_')
 
     st_date = str(session['select_year']) + '-' + str(session['select_month']).rjust(2, '0') + '-' + \
-              str(session['select_day']).rjust(2, '0')
+        str(session['select_day']).rjust(2, '0')
     count, mas_data, moneys, summa_money, mas_structure = common.prepare_summary()
 
     x = list()

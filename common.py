@@ -15,6 +15,7 @@ OWN_PORT = 8000
 kirill = 'Kirill!981'
 
 rashod_id = None
+object_code = 'rashod'
 categories = list()
 
 months = ['январь', 'февраль', 'март', 'апрель', 'май', 'июнь', 'июль', 'август', 'сентябрь', 'октябрь', 'ноябрь',
@@ -300,6 +301,7 @@ def prepare_summary():
                 for data in result:
                     if data['6'] == 2 and data['5'] == guid:
                         data['2'] = "%.2f" % data['2']
+                        data['3'] = translateFromBase(data['3'])
                         mas_structure.append(data)
 
         for data in result:

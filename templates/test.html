@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<header class="header">
+  <div class="header__inner">
+    <div class="header__logo">
+      <p>Smartlanding</p>
+    </div>
+    <button id="callback-button" class="header__button">Обратный звонок</button>
+  </div>
+</header>
+<!-- Модальное окно -->
+<div class="modal">
+  <div class="modal__content">
+    <link rel="stylesheet" type="text/css" href="/static/css/test.css">
+    <button class="modal__close-button"><img src="./img/close.svg" width="18" alt="Закрыть"></button>
+    <!-- Контент модального окна -->
+    <h1 class="modal__title">Контент для примера</h1>
+    <p class="modal__description">Статья с уроком - <a href="/kak-sdelat-modalnoe-okno-na-sajte.html">тут</a>.</p>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+  $(function () {
+    $('#callback-button').click(function () {
+      console.log('Клик!');
+    })
+
+    $('#callback-button').click(function () {
+      $('.modal').addClass('modal_active');
+    });
+
+    $('.modal__close-button').click(function () {
+      $('.modal').removeClass('modal_active');
+    });
+
+    $('.modal').mouseup(function (e) {
+        let modalContent = $(".modal__content");
+        if (!modalContent.is(e.target) && modalContent.has(e.target).length === 0) {
+            $(this).removeClass('modal_active');
+        }
+    });
+  });
+
+
+</script>
+{% endblock %}

@@ -9,6 +9,7 @@ table, th, td
     border: 1px solid #0088ff;
     font-family:Verdana;
     font-size:12px;
+
 }
 table
 {
@@ -33,4 +34,12 @@ tfoot
 .container
 {
     margin: 10px;
+}
+
+.button_radius {
+    background: #E0FFFF; /* Цвет фона */
+    border: 1px solid #7a7b7e; /* Параметры рамки */
+    width: 30px; /* Ширина кнопки */
+    height: 25px; /* Высота */
+    border-radius: 25px;
 }
