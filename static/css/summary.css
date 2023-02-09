@@ -1,11 +1,9 @@
-body
-{
+body {
     font-family:Verdana;
     font-size:12px;
 }
 
-table, th, td
-{
+table, th, td {
     border: 1px solid #0088ff;
     font-family: Verdana;
     font-size: 12px;
@@ -15,28 +13,24 @@ table {
     border-collapse: collapse;
 }
 
-td
-{
+td {
     height: 12px;
 }
-th
-{
+th {
     background: #ffc107;
     background: #E0FFFF;
     color: blue;
 }
 
-tfoot
-{
+tfoot {
     font-size:12px;
     background: #FFE4B5;
     background: #E0FFFF;
     color: blue;
 }
 
-.container
-{
-    margin: 0px;
+.container {
+    margin: 10px;
 }
 
 /* для ширины 0-й колонки по содержимому */
@@ -52,4 +46,29 @@ tr > :first-child {
     width: 30px; /* Ширина кнопки */
     height: 25px; /* Высота */
     border-radius: 25px;
+}
+
+.fixed-block111 {
+    position: fixed;
+    z-index: 100;
+    top: 0;
+    height: 30px;
+  }
+
+.colortext {
+    color: red;
+    font-weight: bold;
+}
+
+.dataTables_filter { /* сдвинуть влево окно для поиска */
+    text-align: left !important;
+    left: 0%;
+}
+
+
+.dataTables_paginate1 {
+    margin-top: 15px;
+    position: absolute;
+    text-align: left;
+    left: 0%;
 }

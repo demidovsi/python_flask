@@ -1,10 +1,15 @@
-{% extends 'base_index.html' %}
+{% extends 'base.html' %}
 
-{% block content1 %}
-<!--    <caption>Информация за {{type_history}}</caption>-->
+{% block content %}
+<link rel="stylesheet" type="text/css" href="/static/css/summary.css">
 <form method="post" name="summary">
+    <div id="combobox">
+        <p style="font-size:16px; font-weight: bold; color: blue;">Сводный отчет по расходам за:
+            {% include "import/type_interval.html" %} </p>
+        <p> {% include "import/dates.html" %} </p>
+    </div>
     <input type="hidden" id="page_summary" name="page_summary" value="{{page_summary}}">
-    <table width="1000" id="summaryTable" class="table table-striped hover order-column" table-layout="fixed">
+    <table width="400" id="summaryTable" class="table table-striped hover order-column">
         <thead>
             <tr>
                 <th scope="col">Тип расхода</th>
@@ -23,7 +28,7 @@
         </thead>
         <tfoot>
             <tr>
-                <td colspan="2"> Суммарно истрачено = {{summa_money}}</td>
+                <td colspan="2"> Суммарно истрачено = <span class="colortext">{{summa_money}}</span> шекелей</td>
                 {% for i in range(count_day): %}
                     <td> <div align="right">{{moneys[i]}}</div></td>
                 {% endfor %}
@@ -53,11 +58,11 @@
     </table>
 <!--    /* таблица подвала */-->
     {% if category_name == '' %}
-        <p style="font-size:16px; font-weight: bold; color: red:"> Расшифровка типа расходов (нужно выбрать в таблице) </p>
+        <p style="font-size:16px; font-weight: bold; color: red:"> Расшифровка расходов в категории (нужно выбрать в таблице) </p>
     {% else %}
-        <p style="font-size:16px; font-weight: bold; color: red:"> Расшифровка типа расходов = {{category_name}}</p>
+        <p style="font-size:16px; font-weight: bold;">Расшифровка расходов в категории <span class="colortext"> {{category_name}}</span></p>
     {% endif %}
-    <table width="900" id="structureTable" class="table table-striped hover order-column">
+    <table id="structureTable" class="table table-striped hover order-column">
         <thead>
             <tr>
                 <th scope="col">Дата</th>
@@ -92,18 +97,19 @@
         $(function() {
             $(document).ready(function () {
 
-                $('#summaryTable').DataTable({
-                    displayStart: document.querySelector('#page_summary').value * 10,
-                });
+                var table=$('#summaryTable').DataTable({
+                    displayStart: document.querySelector('#page_summary').value * 10, });
 
                 $('#structureTable').DataTable({
-                    order: [[3, "asc"]],
+                    order: [[3, "asc"]], });
+
+                $('#summaryTable').on( 'page.dt', function (){
+                       var info = table.page.info();
+                       document.querySelector('#page_summary').value = info.page;
                 });
 
                 $('#combobox').on('change', function()
-                {
-                    document.forms['summary'].submit();
-                });
+                { document.forms['summary'].submit(); });
             });
         });
   </script>

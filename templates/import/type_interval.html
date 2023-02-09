@@ -1,0 +1,18 @@
+    <select id="select_type" name="type_history">
+    {% if type_history == "Месяц": %}
+            <option value="Сутки"> Сутки</option>
+            <option value="Месяц" selected> Месяц</option>
+            <option value="Год"> Год</option>
+    {% endif %}
+    {% if type_history == "Год": %}
+            <option value="Сутки"> Сутки</option>
+            <option value="Месяц"> Месяц</option>
+            <option value="Год" selected> Год</option>
+    {% endif %}
+    {% if type_history == "Сутки": %}
+            <option value="Сутки" selected> Сутки</option>
+            <option value="Месяц"> Месяц</option>
+            <option value="Год"> Год</option>
+    {% endif %}
+    </select>
+    <button type="submit" class="btn btn-success">Вывести</button>

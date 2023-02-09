@@ -1,16 +1,27 @@
-{% extends 'base.html' %}
-
-{% block content %}
-<form method="post" name="login" id="ModalForm" class="form">
-    <div class="modal-body">
-        <link rel="stylesheet" type="text/css" href="/static/css/login.css">
-        User name:  <input type="text" id="user_name" name="user_name" class="form-control" placeholder="Введите имя пользователя">
-        Password <input type="password" id="password" name="password" class="form-control" placeholder="Введите пароль">
-        <p></p>
-    </div>
-    <div class="modal-header">
-        <input type="submit" class="btn btn-success" value="Принять" text-align="center">
-    </div>
-</form>
-{% endblock %}
+<!doctype html>
+<html lang="ru">
+    <head>
+    <!-- Required meta tags -->
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <!-- Bootstrap CSS -->
+        <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
+              integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+  </head>
+        <div class="container">
+            <form method="post">
+                <div>
+                    <link rel="stylesheet" type="text/css" href="/static/css/login.css">
+                    <a class="text">User name:</a>
+                    <input id="user_name" name="user_name" class="form-control"
+                           placeholder="Введите имя пользователя">
+                    <a class="text"></a> Password: </a>
+                    <input type="password" id="password" name="password"
+                           class="form-control" placeholder="Введите пароль">
+                    <p></p>
+                    <input type="submit" class="btn" value="Принять">
+                </div>
+            </form>
+        </div>
+</html>
 

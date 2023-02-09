@@ -2,10 +2,19 @@
 {% extends 'base.html' %}
 
 {% block content %}
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-	<h1>Список категорий расходов:</h1>
-    {% 	for category in categories %}
-        <li>{{category.id}} - {{category.sh_name}}</li>
-    {% endfor %}
-    <h3>----------------------------</h3>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/categories.css') }}">
+    <div class="bblock">
+        <h1 style="color: red;">Список категорий расходов:</h1>
+        {% 	for category in categories %}
+            <li>{{category.id}} - {{category.sh_name}}</li>
+        {% endfor %}
+        <h3>----------------------------</h3>
+    </div>
+    <div class="bblock">
+        <h1 style="color: green">Список категорий доходов:</h1>
+        {% 	for category in categories_income %}
+            <li>{{category.id}} - {{category.sh_name}}</li>
+        {% endfor %}
+        <h3>----------------------------</h3>
+    </div>
 {% endblock %}

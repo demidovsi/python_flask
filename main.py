@@ -11,7 +11,7 @@ app = Flask(__name__)
 app.config['SECRET_KEY'] = os.urandom(20).hex()
 app.config['CSRF_ENABLED'] = True
 app.permanent = True
-app.permanent_session_lifetime = datetime.timedelta(hours=1)
+app.permanent_session_lifetime = datetime.timedelta(hours=2)
 
 
 @app.route('/', methods=('GET', 'POST'))
@@ -54,7 +54,7 @@ def index():
         return render_template(
             "index.html", datas=datas, st_date=st_date, type_history=session['select_type'], months=common.months,
             select_name_month=session['select_name_month'], year=session['year'], count_datas=len(datas),
-            moneys=round(moneys, 2), page_history=int(page_history))
+            moneys=common.str1000(int(moneys)), page_history=int(page_history))
     else:
         error = error + ' Пользователь = ' + session['user_name']
         return error
@@ -178,7 +178,9 @@ def category():
     common.init_session()
     if session['rights'] is None:
         return redirect('/login/')
-    return render_template("categories.html", title="Категории расходов", categories=common.categories)
+    common.load_categories()
+    return render_template("categories.html", title="Категории расходов", categories=common.categories,
+                           categories_income=common.categories_income)
 
 
 @app.route('/summary/', methods=('GET', 'POST'))
@@ -189,6 +191,8 @@ def summary():
     common.clear_current()
     if request.method == 'POST':
         common.get_current(request)
+        if 'page_summary' in request.form:
+            session['page_summary'] = request.form['page_summary']
         for key in request.form.keys():
             if 'correct' in key:
                 st2, st2 = key.split('correct')
@@ -215,11 +219,11 @@ def summary():
         page_summary = session['page_summary']
     else:
         page_summary = 0
-    session['page_summary'] = 0
+        session['page_summary'] = 0
     return render_template(
         "summary.html", st_date=st_date, type_history=session['select_type'], months=common.months,
         select_name_month=session['select_name_month'], year=session['year'], datas=mas_data, count_day=count,
-        index=index_column, moneys=moneys, summa_money="%.0f" % summa_money, mas_structure=mas_structure,
+        index=index_column, moneys=moneys, summa_money=common.str1000(int(summa_money)), mas_structure=mas_structure,
         category_name=session['select_category_name'], page_summary=page_summary)
 
 
@@ -231,7 +235,8 @@ def login():
         password = request.form.get('password')
         txt, result = common.login(user_name, password)
         if not result:
-            flash('Ошибка login = ' + txt)
+            txt = json.loads(txt)
+            flash('Error login : ' + txt['detail'], 'warning')
             return render_template('login.html')
         token = common.decode(common.kirill, session['token'])
         token = json.loads(token)
@@ -256,8 +261,7 @@ def logout():
 
 @app.route('/test/', methods=('GET', 'POST'))
 def test():
-    return render_template('test.html')
-    # return redirect('/test/#openModal')
+    return render_template('test1.html')
 
 
 @app.route('/delete/<int:obj_id>/', methods=('GET', 'POST'))
@@ -267,12 +271,17 @@ def delete(obj_id):
             st = request.form['indexYes']
             if st != '':
                 token = session['token']
-                answer, result, status_result = common.send_rest('v1/object/' + str(common.rashod_id) + '/' +st,
+                answer, result, status_result = common.send_rest('v1/object/' + str(common.rashod_id) + '/' + st,
                                                                  'DELETE', token_user=token, lang='ru')
                 if not result:
                     flash('ERROR: ' + answer, 'warning')
                 else:
                     flash('Расход с ID = ' + st + ' успешно удален', 'success')
+            else:
+                flash('Отказ от подтверждения удаления (ни да, ни нет)', 'info')
+        if 'indexNo' in request.form:
+            st = request.form['indexNo']
+            flash('Отказ от удаления ID = ' + st, 'info')
         if 'page_for_return' in session and session['page_for_return'] is not None:
             st = session['page_for_return']
             session['page_for_return'] = None
@@ -282,8 +291,8 @@ def delete(obj_id):
     return render_template("delete.html", obj_id=obj_id)
 
 
-@app.route('/char/', methods=('GET', 'POST'))
-def char():
+@app.route('/chart/', methods=('GET', 'POST'))
+def chart():
     common.init_session()
     if session['rights'] is None:
         return redirect('/login/')
@@ -311,10 +320,10 @@ def char():
         x.append(data['1'])
         y.append(float("%.2f" % (data['2'] / summa_money * 100)))
     return render_template(
-        "char.html", st_date=st_date, type_history=session['select_type'], months=common.months,
+        "chart.html", st_date=st_date, type_history=session['select_type'], months=common.months,
         select_name_month=session['select_name_month'], year=session['year'], labels=x, values=y,
         legend='% Проценты к общей сумме расходов за период',
-        summa_money=int(summa_money))
+        summa_money=common.str1000(int(summa_money)))
 
 
 common.make_start()

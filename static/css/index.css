@@ -1,38 +1,32 @@
-body
-{
+body {
     font-family:Verdana;
     font-size:12px;
 }
 
-table, th, td
-{
+table, th, td {
     border: 1px solid #0088ff;
     font-family:Verdana;
     font-size:12px;
 
 }
-table
-{
+table {
     box-shadow: 5px 5px grey;
 }
 
-th
-{
+th {
     background: #E0FFFF;
     background: #ffc107;
     color: blue;
 }
 
-tfoot
-{
+tfoot {
     font-size:16px;
     background: #FFE4B5;
     background: #E0FFFF;
     color: blue;
 }
 
-.container
-{
+.container {
     margin: 10px;
 }
 
@@ -42,4 +36,9 @@ tfoot
     width: 30px; /* Ширина кнопки */
     height: 25px; /* Высота */
     border-radius: 25px;
+}
+.color-red {
+    color: red;
+    font-weight: bold;
+    font-size:16px;
 }

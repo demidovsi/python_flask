@@ -17,6 +17,7 @@ kirill = 'Kirill!981'
 rashod_id = None
 object_code = 'rashod'
 categories = list()
+categories_income = list()
 
 months = ['январь', 'февраль', 'март', 'апрель', 'май', 'июнь', 'июль', 'август', 'сентябрь', 'октябрь', 'ноябрь',
           'декабрь']
@@ -208,11 +209,15 @@ def translateToBase(st):
 
 
 def load_categories():
-    global categories
+    global categories, categories_income
     answer, result, status_result = send_rest('v1/objects/family/categor', token_user='', lang='en')
     if result:
         answer = json.loads(answer)
         categories = answer['values']
+        answer, result, status_result = send_rest('v1/objects/family/category_income', token_user='', lang='en')
+        if result:
+            answer = json.loads(answer)
+            categories_income = answer['values']
 
 
 def clear_current():
@@ -357,6 +362,9 @@ def prepare_summary():
         for data in mas_data:
             if data['2'] is not None and data['2'] != '':
                 summa_money += data['2']
+        for i in range(len(moneys)):
+            if moneys[i] is not None:
+                moneys[i] = str1000(moneys[i])
     return count, mas_data, moneys, summa_money, mas_structure
 
 
@@ -364,7 +372,7 @@ def init_session():
     if 'select_type' not in session:
         session['select_type'] = 'Месяц'
     if 'select_name_month' not in session:
-        session['select_name_month'] = 'январь'
+        session['select_name_month'] = months[time.gmtime().tm_mon - 1]
     if 'year' not in session:
         session['year'] = time.gmtime().tm_year
     if 'select_category_name' not in session:
@@ -375,10 +383,8 @@ def init_session():
         session['current_month']= None
     if 'current_day' not in session:
         session['current_day']= None
-    if 'current_day' not in session:
-        session['current_day'] = None
-    if 'current_day' not in session:
-        session['current_day'] = None
+    if 'select_year' not in session:
+        session['select_year'] = time.gmtime().tm_year
     if 'select_month' not in session:
         session['select_month'] = time.gmtime().tm_mon
     if 'select_day' not in session:
@@ -403,3 +409,18 @@ def decode(key, enc):
         dec_c = chr((256 + ord(enc[i]) - ord(key_c)) % 256)
         dec.append(dec_c)
     return "".join(dec)
+
+
+def str1000(number, sep=' '):
+    """
+    Вывод целого значения числа с разделением по тысячам (три знака) через указанную строку (по умолчанию - пробел).
+    :param number: значение целого числа,
+    :param sep: - разделитель между тройками цифр,
+    :return: возвращается строка, типа 123 456 789.
+    """
+    if number is None:
+        return ''
+    if type(number) == int or type(number) == str or type(number) == numpy.int32:
+        n = str(number)[::-1]
+        return sep.join(n[i:i + 3] for i in range(0, len(n), 3))[::-1]
+    return str(number)

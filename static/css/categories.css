@@ -1,0 +1,17 @@
+h1 {
+    border: 2px #eee solid;
+    text-align: center;
+    padding: 10px;
+    font-family:Verdana;
+    font-size:16px;
+    font-weight: bold;
+}
+.bblock {
+    float: left;
+    margin-right: 20px;
+}
+
+.container {
+    margin: 10px;
+    margin-left: 20px;
+}

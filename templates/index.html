@@ -1,75 +1,15 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<link rel="stylesheet" type="text/css" href="/static/css/index.css">
+<link rel="stylesheet" type="text/css" href="/static/css/index.css" xmlns="http://www.w3.org/1999/html">
 <form method="post" name="history">
     <div id="combobox">
         <p style="font-size:16px; font-weight: bold; color: red;">История расходов за:
-<!--            <link rel="import" href="type_interval.html">-->
-<!--            <script>-->
-<!--                  var link = document.querySelector('link[rel=import]');-->
-<!--                  var content = link.import.querySelector('.type_interval');-->
-<!--                  document.body.appendChild(content.cloneNode(true));-->
-<!--            </script>-->
-            <select id="select_type" name="type_history">
-            {% if type_history == "Месяц": %}
-                    <option value="Сутки"> Сутки</option>
-                    <option value="Месяц" selected> Месяц</option>
-                    <option value="Год"> Год</option>
-            {% endif %}
-            {% if type_history == "Год": %}
-                    <option value="Сутки"> Сутки</option>
-                    <option value="Месяц"> Месяц</option>
-                    <option value="Год" selected> Год</option>
-            {% endif %}
-            {% if type_history == "Сутки": %}
-                    <option value="Сутки" selected> Сутки</option>
-                    <option value="Месяц"> Месяц</option>
-                    <option value="Год"> Год</option>
-            {% endif %}
-            </select>
-            <button type="submit" class="btn btn-success">Выполнить</button>
-
-            <input type="hidden" id="page_history" name="page_history" value="{{page_history}}">
-        </p>
-        <p>
-            <button name="left" value="-1" class="button_radius"> <img src="/static/left.png" width="18" height="18"> </button>
-            {% if type_history == "Сутки": %}
-                Дата расходов: <input type="date" id="start" name="dt_start" value="{{st_date}}" required >
-            {% endif %}
-            {% if type_history == "Месяц": %}
-                Месяц:
-                <select id="select_name_month" name="select_name_month">
-                    {% for month in months: %}
-                        {% if month == select_name_month: %}
-                            <option value="{{month}}" selected>{{month}}</option>
-                        {% else %}
-                            <option value="{{month}}">{{month}}</option>
-                        {% endif %}
-                    {% endfor %}
-                </select>
-            {% endif %}
-            {% if type_history != "Сутки": %}
-                Год:
-                <input type="number" name="year" min="2015" value="{{year}}">
-            {% endif %}
-
-            <button name="right" value="+1" class="button_radius"> <img src="/static/right.png" width="18" height="18"> </button>
-
-            {% if type_history == "Месяц": %}
-                <button name="current_month" value="current_month"> Текущий месяц </button>
-            {% endif %}
-
-            {% if type_history == "Год": %}
-                <button name="current_year" value="current_year"> Текущий год </button>
-            {% endif %}
-
-            {% if type_history == "Сутки": %}
-                <button name="current_day" value="current_day"> Сегодня </button>
-            {% endif %}
-        </p>
+            {% include "import/type_interval.html" %}
+            <input type="hidden" id="page_history" name="page_history" value="{{page_history}}"> </p>
+        <p> {% include "import/dates.html" %} </p>
     </div>
-    <p style="text-align: center; color: red; font-size:16px; font-weight: bold; ">Расходы за {{type_history}}</p>
+    <p style="text-align: center; font-size:16px; font-weight: bold; ">Расходы за <span class="color-red"> {{type_history}}</span></p>
 
     <table id="historyTable" class="table table-striped hover order-column">
         <thead>
@@ -85,8 +25,7 @@
         </thead>
         <tfoot>
             <tr>
-                <td colspan="3"> Суммарный расход за период= {{moneys}}</td>
-<!--                <td colspan="4"> Суммарно покупок={{count_datas}}</td>-->
+                <td colspan="3"> Суммарный расход за период = <span class="color-red">{{moneys}}</span> шекелей</td>
                 <td colspan="4"> </td>
             </tr>
         </tfoot>
@@ -125,7 +64,7 @@
               {orderable: true, searchable: true},
               {orderable: true, searchable: true},
               {orderable: true, searchable: true},
-              {orderable: true, searchable: true},
+              {orderable: false, searchable: false},
               {orderable: false, searchable: false}
              ],
           });
@@ -133,6 +72,7 @@
           $('#historyTable').on( 'page.dt', function ()
           {
                var info = table.page.info();
+               console.log(table);
                document.querySelector('#page_history').value = info.page;
           });
 

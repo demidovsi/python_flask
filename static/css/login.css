@@ -1,5 +1,30 @@
+.btn {
+    background: #F0F8FF;
+    border: #555 solid 2px;
+    border-radius: 15px;
+    cursor: pointer;
+    display: inline-block;
+    font-size: 14px;
+    padding: 8px 15px;
+    text-decoration: none;
+    text-align: center;
+    min-width: 100px; /* Ширина кнопки в пикселах */
+    left: 10%;
+    position: relative;
+    color: black;
+}
+.btn:hover, .btn:focus {
+    background: #E0FFFF;
+    color: green;
+    transform: scale(1.2, 1.2)
+}
+#user_name { width: 300px; /* Ширина поля в пикселах */ margin-left: 50px; }
+#password { width: 300px; /* Ширина поля в пикселах */ margin-left: 50px; }
 
-.container
-{
+.container {
     margin-left: 50px;
+    margin-top: 20px;
+}
+.text {
+    margin-left:50px;
 }
