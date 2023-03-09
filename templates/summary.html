@@ -96,7 +96,6 @@
 <!--  после заполнения html выполняется эта функция-->
         $(function() {
             $(document).ready(function () {
-
                 var table=$('#summaryTable').DataTable({
                     displayStart: document.querySelector('#page_summary').value * 10, });
 
@@ -104,12 +103,11 @@
                     order: [[3, "asc"]], });
 
                 $('#summaryTable').on( 'page.dt', function (){
-                       var info = table.page.info();
-                       document.querySelector('#page_summary').value = info.page;
-                });
+                    var info = table.page.info();
+                    document.querySelector('#page_summary').value = info.page; });
 
-                $('#combobox').on('change', function()
-                { document.forms['summary'].submit(); });
+                $('#combobox').on('change', function() {
+                    document.forms['summary'].submit(); });
             });
         });
   </script>

@@ -235,15 +235,22 @@ def login():
         password = request.form.get('password')
         txt, result = common.login(user_name, password)
         if not result:
-            txt = json.loads(txt)
-            flash('Error login : ' + txt['detail'], 'warning')
+            try:
+                txt = json.loads(txt)
+                flash('Error login : ' + txt['detail'] + '; user_name=' + user_name, 'warning')
+            except Exception as er:
+                flash('Error login : ' + txt + '; user_name=' + user_name + ': ' + f"{er}", 'warning')
+
             return render_template('login.html')
         token = common.decode(common.kirill, session['token'])
         token = json.loads(token)
         for key in token.keys():
-            common.SCHEMA_NAME = key
+            if key == '***':
+                common.SCHEMA_NAME = 'family'
+            else:
+                common.SCHEMA_NAME = key
             break
-        session['rights'] = token[common.SCHEMA_NAME]
+        session['rights'] = token[key]
 
         if 'visible' not in session['rights']:
             flash(f'Для пользователя {user_name} нет доступа к базе данных')
